@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "scheme": "AstroVue",
+    "name": "AstroVue",
+    "slug": "astrovue",
+    "owner": "rahul.amu2",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rahulamu2.AstroVue",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBkVOJM6k6vQkGownJ2m1OcnQG0hZB4VQ4"
+      },
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to convert your voice into questions.",
+        "NSMicrophoneUsageDescription": "This app uses the microphone for voice input."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBkVOJM6k6vQkGownJ2m1OcnQG0hZB4VQ4"
+        }
+      },
+      "package": "com.rahulamu2.AstroVue"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "41f1b53f-aacc-41ec-9e01-bb9d76936b61"
+      }
+    }
+  }
+}
