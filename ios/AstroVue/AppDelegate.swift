@@ -1,6 +1,7 @@
-import ExpoModulesCore
-import React
 import UIKit
+import ExpoModulesCore
 
 @UIApplicationMain
-class AppDelegate: ExpoAppDelegate {}
+class AppDelegate: UIResponder, UIApplicationDelegate {
+  var window: UIWindow?
+}
