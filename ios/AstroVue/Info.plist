@@ -11,7 +11,7 @@
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <string>com.kundlisutra.astrovue</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>AstroVue</string>
-          <string>com.rahulamu2.AstroVue</string>
+          <string>com.kundlisutra.astrovue</string>
         </array>
       </dict>
     </array>
