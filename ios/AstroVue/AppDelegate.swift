@@ -1,7 +1,9 @@
-import UIKit
 import ExpoModulesCore
+import ExpoModulesReactNativeAdapter
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
-  var window: UIWindow?
+class AppDelegate: ExpoAppDelegate, ReactNativeFactoryProvider {
+  func createReactNativeFactory() -> ReactNativeFactory {
+    return AppReactNativeFactory()
+  }
 }
