@@ -1,7 +1,7 @@
 import { BASE_URL } from "../config/constants";
 // ✅ Final HomeScreen with dynamic Daily Energy API integration and preserved all existing features
 
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary } from 'expo-image-picker';
 
 import { decode as atob } from 'base-64'; // you may need to install this
 import { Alert, Platform } from 'react-native'; 
@@ -55,6 +55,7 @@ import useDharmaCoins from './useDharmaCoins';
 
 import { LinearGradient } from 'expo-linear-gradient';
 
+const dummy = require('../assets/screens_avatar1.png');
 
 
 
