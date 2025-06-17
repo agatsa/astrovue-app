@@ -9,25 +9,25 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		4A5EAF72C0C641D82DA328A8 /* libPods-AstroVue.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 737671EE05B62414C213B2A5 /* libPods-AstroVue.a */; };
-		85A0A388D86DBF5263285202 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F86B690E34C77ED6C3A0442 /* ExpoModulesProvider.swift */; };
+		6DB54554B09A5C3083CE8B39 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 20E9DDC6A2A9548AD9DC3662 /* PrivacyInfo.xcprivacy */; };
+		77E499AE5C65FA86BB5869E7 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1090F5FB268ED19467FCE7E /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		D8490E82D55FA5E7A8C68DE0 /* libPods-AstroVue.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BD4841F78657A8D09FB623E9 /* libPods-AstroVue.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F6166179491D871F69394280 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CB62A5297DF20A5B84350B50 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* AstroVue.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AstroVue.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AstroVue/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AstroVue/Info.plist; sourceTree = "<group>"; };
-		5F86B690E34C77ED6C3A0442 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AstroVue/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		737671EE05B62414C213B2A5 /* libPods-AstroVue.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AstroVue.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		94141A289DFD421D82BC96AE /* Pods-AstroVue.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstroVue.release.xcconfig"; path = "Target Support Files/Pods-AstroVue/Pods-AstroVue.release.xcconfig"; sourceTree = "<group>"; };
+		20E9DDC6A2A9548AD9DC3662 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = AstroVue/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		876EA8FCDF6D158C7B0C0781 /* Pods-AstroVue.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstroVue.debug.xcconfig"; path = "Target Support Files/Pods-AstroVue/Pods-AstroVue.debug.xcconfig"; sourceTree = "<group>"; };
+		9686199FD27DB6C95D3525AD /* Pods-AstroVue.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstroVue.release.xcconfig"; path = "Target Support Files/Pods-AstroVue/Pods-AstroVue.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = AstroVue/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CB62A5297DF20A5B84350B50 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = AstroVue/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		E49D3B547B743B0768B927AF /* Pods-AstroVue.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AstroVue.debug.xcconfig"; path = "Target Support Files/Pods-AstroVue/Pods-AstroVue.debug.xcconfig"; sourceTree = "<group>"; };
+		BD4841F78657A8D09FB623E9 /* libPods-AstroVue.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AstroVue.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F1090F5FB268ED19467FCE7E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AstroVue/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AstroVue/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* AstroVue-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "AstroVue-Bridging-Header.h"; path = "AstroVue/AstroVue-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4A5EAF72C0C641D82DA328A8 /* libPods-AstroVue.a in Frameworks */,
+				D8490E82D55FA5E7A8C68DE0 /* libPods-AstroVue.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				CB62A5297DF20A5B84350B50 /* PrivacyInfo.xcprivacy */,
+				20E9DDC6A2A9548AD9DC3662 /* PrivacyInfo.xcprivacy */,
 			);
 			name = AstroVue;
 			sourceTree = "<group>";
@@ -62,26 +62,34 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				737671EE05B62414C213B2A5 /* libPods-AstroVue.a */,
+				BD4841F78657A8D09FB623E9 /* libPods-AstroVue.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		3D28E777AA61B651B44399DA /* Pods */ = {
+		3FDB6DC65149F3879C96D2F6 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				E49D3B547B743B0768B927AF /* Pods-AstroVue.debug.xcconfig */,
-				94141A289DFD421D82BC96AE /* Pods-AstroVue.release.xcconfig */,
+				52136897024BE8FE86360F55 /* AstroVue */,
 			);
-			path = Pods;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
-		5A60BDE3392E97170DF2F35E /* AstroVue */ = {
+		52136897024BE8FE86360F55 /* AstroVue */ = {
 			isa = PBXGroup;
 			children = (
-				5F86B690E34C77ED6C3A0442 /* ExpoModulesProvider.swift */,
+				F1090F5FB268ED19467FCE7E /* ExpoModulesProvider.swift */,
 			);
 			name = AstroVue;
+			sourceTree = "<group>";
+		};
+		69EE9BD465B306005C46827B /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				876EA8FCDF6D158C7B0C0781 /* Pods-AstroVue.debug.xcconfig */,
+				9686199FD27DB6C95D3525AD /* Pods-AstroVue.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -98,8 +106,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				3D28E777AA61B651B44399DA /* Pods */,
-				EBCD6490197C06C7EA1ECC85 /* ExpoModulesProviders */,
+				69EE9BD465B306005C46827B /* Pods */,
+				3FDB6DC65149F3879C96D2F6 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -123,14 +131,6 @@
 			path = AstroVue/Supporting;
 			sourceTree = "<group>";
 		};
-		EBCD6490197C06C7EA1ECC85 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				5A60BDE3392E97170DF2F35E /* AstroVue */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -139,13 +139,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AstroVue" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				86E4C4DD0613936205A48AA7 /* [Expo] Configure project */,
+				118E8CD221093053857FB3BB /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				656A64C60EA541EEA90F0518 /* [CP] Embed Pods Frameworks */,
+				CFBF891469EFD14DF74A2727 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -195,7 +195,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				F6166179491D871F69394280 /* PrivacyInfo.xcprivacy in Resources */,
+				6DB54554B09A5C3083CE8B39 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,23 +239,24 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		656A64C60EA541EEA90F0518 /* [CP] Embed Pods Frameworks */ = {
+		118E8CD221093053857FB3BB /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AstroVue/Pods-AstroVue-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			inputFileListPaths = (
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AstroVue/Pods-AstroVue-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AstroVue/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -351,24 +352,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AstroVue/Pods-AstroVue-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		86E4C4DD0613936205A48AA7 /* [Expo] Configure project */ = {
+		CFBF891469EFD14DF74A2727 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AstroVue/Pods-AstroVue-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AstroVue/expo-configure-project.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AstroVue/Pods-AstroVue-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -378,7 +378,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				85A0A388D86DBF5263285202 /* ExpoModulesProvider.swift in Sources */,
+				77E499AE5C65FA86BB5869E7 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,7 +387,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E49D3B547B743B0768B927AF /* Pods-AstroVue.debug.xcconfig */;
+			baseConfigurationReference = 876EA8FCDF6D158C7B0C0781 /* Pods-AstroVue.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -405,7 +405,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -424,7 +424,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 94141A289DFD421D82BC96AE /* Pods-AstroVue.release.xcconfig */;
+			baseConfigurationReference = 9686199FD27DB6C95D3525AD /* Pods-AstroVue.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -437,7 +437,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -508,10 +508,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -566,10 +563,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
