@@ -8,13 +8,12 @@ import { getStorage } from 'firebase/storage'; //
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAMmJ_yrKmEBFIBFZNdMe6H_lsLkqX80hI",
+  apiKey: "AIzaSyAkRRynJyf1fVTxHUXU-LaH7DLkTc4kbqM",
   authDomain: "kundli-auth-test.firebaseapp.com",
   projectId: "kundli-auth-test",
-  storageBucket: "kundli-auth-test.appspot.com",
+  storageBucket: "kundli-auth-test.firebasestorage.app",
   messagingSenderId: "731436072433",
-  appId: "1:731436072433:web:531dee80d3bd73e74f9850",
-  measurementId: "G-1LFTWN88XQ"
+  appId: "1:731436072433:android:01715dafb3ceeea44f9850"
 };
 
 // Prevent re-initialization

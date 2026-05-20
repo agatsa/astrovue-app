@@ -48,6 +48,23 @@
       "eas": {
         "projectId": "41f1b53f-aacc-41ec-9e01-bb9d76936b61"
       }
+    },
+    "plugins": [
+      "expo-localization",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#7c3aed",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ]
+    ],
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#7c3aed",
+      "androidMode": "default"
     }
   }
 }

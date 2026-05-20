@@ -102,15 +102,19 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            storeFile file('kundlisutra-release.keystore')
+            storePassword 'KundliSutra@2025'
+            keyAlias 'kundlisutra'
+            keyPassword 'KundliSutra@2025'
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -144,6 +148,15 @@ android {
         options.each {
             android.packagingOptions[prop] += it
         }
+    }
+}
+
+configurations.all {
+    exclude group: 'com.android.support'
+    resolutionStrategy {
+        force 'androidx.versionedparcelable:versionedparcelable:1.1.1'
+        force 'androidx.core:core:1.13.1'
+        force 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     }
 }
 

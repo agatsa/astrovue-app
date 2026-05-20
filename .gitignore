@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native build outputs
+android/build/
+android/app/build/
+android/.gradle/
+ios/build/
+ios/Pods/
+ios/DerivedData/
+*.xcworkspace/
+!ios/*.xcworkspace
+*.xcuserstate
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Cache
+.jest-cache/
+.metro-health-check*
+*.jsbundle
+main.jsbundle
+ios/main.jsbundle
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keys (NEVER commit)
+*.p12
+*.mobileprovision
+*.p8
+google-services.json
+GoogleService-Info.plist
+firebase_key.json

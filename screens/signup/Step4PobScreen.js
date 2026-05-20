@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
@@ -18,6 +19,8 @@ export default function Step4PobScreen({ navigation, route }) {
   const [lon, setLon] = useState(null);
   const [placeSuggestions, setPlaceSuggestions] = useState([]);
   const [placeSelected, setPlaceSelected] = useState(false);
+  const { name, dob, tob, phoneNumber, countryCode } = route.params || {};
+
 
   const fetchLocationDetails = async (placeName) => {
     setPob(placeName);
@@ -48,18 +51,38 @@ export default function Step4PobScreen({ navigation, route }) {
     setPlaceSuggestions([]);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!pob.trim() || !lat || !lon) {
       alert('Please select a valid place from the list');
       return;
     }
 
-    navigation.navigate('Step5Email', {
-      ...route.params,
-      pob,
-      lat,
-      lon,
-    });
+    const latlongpayload = {
+      lat: parseFloat(lat),
+      lon: parseFloat(lon),
+    };
+
+    try {
+      // Save to AsyncStorage
+      await AsyncStorage.setItem('@latlong', JSON.stringify(latlongpayload));
+      console.log('✅ Saved lat/lon to AsyncStorage:', latlongpayload);
+
+      // Retrieve and confirm saved value (optional)
+      const userlatlongStr = await AsyncStorage.getItem('@latlong');
+      const userlatlong = JSON.parse(userlatlongStr || '{}');
+      console.log('📦 Retrieved from AsyncStorage:', userlatlong);
+
+      // Navigate to next step
+      navigation.navigate('Step5Email', {
+        ...route.params,
+        pob,
+        lat,
+        lon,
+      });
+    } catch (error) {
+      console.error('❌ Error saving lat/lon:', error);
+      alert('Failed to save location. Please try again.');
+    }
   };
 
   return (

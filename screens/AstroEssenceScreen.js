@@ -2,8 +2,9 @@ import { BASE_URL } from "../config/constants";
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { API_TOKEN } from '../config/apiConfig';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../config/firebase';
 
 
 const screenWidth = Dimensions.get("window").width;
@@ -22,13 +23,24 @@ export default function AstroEssenceScreen({ route }) {
     const fetchEssence = async () => {
       try {
         const today = new Date().toISOString().split("T")[0];
-        const res = await fetch("http://127.0.0.1:8080/api/essence-profile", {
+        const profileStr = await AsyncStorage.getItem('userProfile');
+        const profile = JSON.parse(profileStr || '{}');
+        const user = auth.currentUser;
+        const idToken = user ? await user.getIdToken() : null;
+        const res = await fetch(`${BASE_URL}/api/essence-profile`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${API_TOKEN}`,
+            ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
           },
-          body: JSON.stringify({ userId, date: today }),
+          body: JSON.stringify({
+            userId,
+            dob: profile?.dob?.split('T')[0] || '',
+            tob: profile?.tob || '00:00',
+            pob: profile?.pob || '',
+            name: profile?.name || 'User',
+            date: today,
+          }),
         });
   
         const json = await res.json();
@@ -55,24 +67,25 @@ export default function AstroEssenceScreen({ route }) {
     try {
       setAiLoading(true);
       setAIResponse('');
-      const res = await fetch("http://127.0.0.1:8080/api/ask-ai", {
+      const profileStr = await AsyncStorage.getItem('userProfile');
+      const profile = JSON.parse(profileStr || '{}');
+      const user = auth.currentUser;
+      const idToken = user ? await user.getIdToken() : null;
+      const res = await fetch(`${BASE_URL}/api/ask-ai`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer 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`,
+          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
         },
         body: JSON.stringify({
-          userId,
+          user_id: profile.email || userId,
           question,
-          context: {
-            moon: data.essence_snapshot.moon,
-            sun: data.essence_snapshot.sun,
-            ascendant: data.essence_snapshot.ascendant,
-            traits: data.trait_scores,
-            elements: data.element_scores,
-            doshas: data.doshas,
-            strengths: data.strengths,
-          },
+          my_dob: profile?.dob?.split('T')[0] || '',
+          my_tob: profile?.tob || '00:00',
+          my_pob: profile?.pob || '',
+          my_name: profile?.name || 'User',
+          context: { topic: 'general' },
+          date: new Date().toISOString().split('T')[0],
         }),
       });
       const json = await res.json();

@@ -21,14 +21,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
-import { KeyboardAvoidingView, Platform } from 'react-native';
+import { KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import ScreenHeader from '../components/ScreenHeader';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 
 // const BASE_URL = 'http://192.168.1.13:8080';
 const screenWidth = Dimensions.get('window').width;
 
-export default function HourlyRiskMeterScreen() {
+export default function HourlyRiskMeterScreen({ navigation }) {
   const [data, setData] = useState([]);
   const [meta, setMeta] = useState({});
   const [selectedHourIndex, setSelectedHourIndex] = useState(null);
@@ -137,10 +138,12 @@ export default function HourlyRiskMeterScreen() {
 
   
   return (
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <ScreenHeader title="Hourly Risk Meter" navigation={navigation} />
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={80} // Adjust if you have a custom header
+      keyboardVerticalOffset={80}
     >
       <KeyboardAwareScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 120 }} // enough space for AskAIBox
@@ -210,9 +213,8 @@ export default function HourlyRiskMeterScreen() {
         </TouchableOpacity>
       </KeyboardAwareScrollView>
     </KeyboardAvoidingView>
+    </View>
   );
-  
-  
 }
 
 const styles = StyleSheet.create({

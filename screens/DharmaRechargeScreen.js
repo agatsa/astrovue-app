@@ -1,99 +1,107 @@
-// DharmaRechargeScreen.js
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-// import RazorpayCheckout from 'react-native-razorpay';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const COIN_RATE = 1.05; // 1 Dharma Coin = ₹1.05
+export default function DharmaRechargeScreen() {
+  const navigation = useNavigation();
 
-const calculateCoins = (amount) => Math.floor(amount / COIN_RATE);
+  const handleRecharge = (amount, coins) => {
+    Alert.alert(
+      'Recharge',
+      `You selected ₹${amount} → ${coins} Dharma Coins.\n\n(Integrate Razorpay here)`,
+      [{ text: 'OK' }]
+    );
+  };
 
-export default function DharmaRechargeScreen({ user, firebaseToken, setCoinBalance }) {
+  return (
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Back Link */}
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backLink}>
+  <Text style={styles.backText}>← Back to Settings</Text>
+    </TouchableOpacity>
+
+    <Text style={styles.header}>🛍️ Recharge Dharma Coins</Text>
+    <Text style={styles.subtext}>Choose a recharge pack to top up your coin wallet.</Text>
+
+    {/* Recharge Options */}
+    <TouchableOpacity style={styles.pack} onPress={() => navigation.navigate('DharmaPaymentWebView', { amount: 49, coins: 50 })}>
+    <Text style={styles.packText}>₹49 → 50 Coins</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.pack} onPress={() => navigation.navigate('DharmaPaymentWebView', { amount: 99, coins: 110 })}>
+    <Text style={styles.packText}>₹99 → 110 Coins</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.pack} onPress={() => navigation.navigate('DharmaPaymentWebView', { amount: 199, coins: 250 })}>
+    <Text style={styles.packText}>₹199 → 250 Coins</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.pack} onPress={() => navigation.navigate('DharmaPaymentWebView', { amount: 399, coins: 550 })}>
+    <Text style={styles.packText}>₹399 → 550 Coins</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.pack} onPress={() => navigation.navigate('DharmaPaymentWebView', { amount: 799, coins: 1200 })}>
+    <Text style={styles.packText}>₹799 → 1200 Coins</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.pack} onPress={() => navigation.navigate('DharmaPaymentWebView', { amount: 1499, coins: 2500 })}>
+    <Text style={styles.packText}>₹1499 → 2500 Coins</Text>
+    </TouchableOpacity>
+
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
-
-//   const [rechargeAmount, setRechargeAmount] = useState('');
-
-//   const handleRecharge = async () => {
-//     const amount = Number(rechargeAmount);
-//     if (isNaN(amount) || amount < 105) {
-//       Alert.alert('Minimum recharge is ₹105');
-//       return;
-//     }
-
-//     const coins = calculateCoins(amount);
-
-//     const options = {
-//       description: `Recharge for ${coins} Dharma Coins`,
-//       currency: 'INR',
-//       key: 'RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
-//       amount: amount * 100,
-//       name: 'Kundli Sutra',
-//       prefill: {
-//         email: user.email || '',
-//         contact: user.phone || '',
-//         name: user.name,
-//       },
-//       theme: { color: '#6237a0' },
-//     };
-
-// //     RazorpayCheckout.open(options)
-// //       .then(async (data) => {
-// //         const res = await fetch(`https://yourdomain.com/api/verify-payment`, {
-// //           method: 'POST',
-// //           headers: {
-// //             Authorization: `Bearer ${firebaseToken}`,
-// //             'Content-Type': 'application/json',
-// //           },
-// //           body: JSON.stringify({
-// //             payment_id: data.razorpay_payment_id,
-// //             expected_amount: amount,
-// //             expected_coins: coins,
-// //           }),
-// //         });
-
-// //         const result = await res.json();
-// //         if (result.success) {
-// //           await AsyncStorage.setItem('@wallet_dharma_coins', result.newBalance.toString());
-// //           setCoinBalance(result.newBalance);
-// //           Alert.alert(`🎉 ${coins} Dharma Coins added!`);
-// //         } else {
-// //           Alert.alert('❌ Payment verification failed');
-// //         }
-// //       })
-// //       .catch((error) => {
-// //         console.error('❌ Payment error:', error);
-// //         Alert.alert('Payment cancelled or failed');
-// //       });
-// //   };
-
-// //   const coins = calculateCoins(Number(rechargeAmount || 0));
-
-// //   return (
-// //     <View style={styles.container}>
-// //       <Text style={styles.title}>💰 Recharge Dharma Coins</Text>
-// //       <TextInput
-// //         placeholder="Enter amount (₹)"
-// //         keyboardType="numeric"
-// //         value={rechargeAmount}
-// //         onChangeText={setRechargeAmount}
-// //         style={styles.input}
-// //       />
-// //       <Text style={styles.coinsText}>You will get: {coins} Dharma Coins</Text>
-// //       <TouchableOpacity style={styles.button} onPress={handleRecharge}>
-// //         <Text style={styles.buttonText}>Proceed to Pay</Text>
-// //       </TouchableOpacity>
-// //     </View>
-// //   );
-// // }
-
-// const styles = StyleSheet.create({
-//   container: { flex: 1, padding: 20, justifyContent: 'center' },
-//   title: { fontSize: 22, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
-//   input: { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8, marginBottom: 12 },
-//   coinsText: { fontSize: 16, marginBottom: 20, textAlign: 'center' },
-//   button: { backgroundColor: '#6237a0', padding: 14, borderRadius: 8 },
-//   buttonText: { color: 'white', textAlign: 'center', fontWeight: '600' },
-// }
-
-// );
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#fffef6',
+  },
+  container: {
+    padding: 20,
+  },
+  backLink: {
+    marginBottom: 10,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#007aff',
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  subtext: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 20,
+  },
+  pack: {
+    backgroundColor: '#ffecb3',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  packText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#b8860b',
+  },
+});

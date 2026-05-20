@@ -70,11 +70,24 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
     bridge.bundleURL ?? bundleURL()
   }
 
+//  override func bundleURL() -> URL? {
+//#if DEBUG
+//    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: ".expo/.virtual-metro-entry")
+//#else
+//    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+//#endif
+//  }
+  
+  
+  // dheeraj added for jsbundle
+  
   override func bundleURL() -> URL? {
-#if DEBUG
-    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: ".expo/.virtual-metro-entry")
-#else
-    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
-#endif
+    #if DEBUG
+      return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index", fallbackExtension: nil)
+    #else
+      return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    #endif
   }
+
+
 }

@@ -1,6 +1,6 @@
 import { BASE_URL } from "../config/constants";
 // ✅ Final HomeScreen with dynamic Daily Energy API integration and preserved all existing features
-
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { launchImageLibrary } from 'expo-image-picker';
 
 import { decode as atob } from 'base-64'; // you may need to install this
@@ -56,6 +56,18 @@ import useDharmaCoins from './useDharmaCoins';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const dummy = require('../assets/screens_avatar1.png');
+
+import ViewShot from 'react-native-view-shot';
+
+import * as Sharing from 'expo-sharing';
+
+import { onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
+
+
+import DharmaCoin from '../utils/dharmaCoinManager';
+
+
 
 
 
@@ -114,6 +126,14 @@ const fetchUserData = async () => {
     }
 
     const idToken = await user.getIdToken(); // ✅ Actual Firebase token
+    console.log("idToken:", idToken);
+    
+
+    const formattedDob = dob?.split('T')[0];
+    const formattedTob = new Date(tob).toISOString().split('T')[1].substring(0, 5);
+
+    console.log('🟡 Final DOB & TOB:', formattedDob, formattedTob);
+
 
     const res = await fetch(`${BASE_URL}/api/daily-energy`, {
       method: 'POST',
@@ -167,8 +187,8 @@ const getUserChart = async () => {
   }
 };
 
-
 export default function HomeScreen({ navigation }) {
+
   const [dailyEnergy, setDailyEnergy] = useState(null);
   const [hourlyRisk, setHourlyRisk] = useState(null);
   const [error, setError] = useState(null);
@@ -194,7 +214,96 @@ export default function HomeScreen({ navigation }) {
   const [maxStreak, setMaxStreak] = useState(0);
   const [supportExpanded, setSupportExpanded] = useState(false);
 
+  const [referralBonusGiven, setReferralBonusGiven] = useState(false);
 
+
+// 
+
+  const viewShotRef = useRef();
+
+    // ✅ Check referral link on first app open
+    useEffect(() => {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          // Allow MSG91-based login: check if phone is stored in AsyncStorage
+          const storedPhone = await AsyncStorage.getItem('@user_phone');
+          if (!storedPhone) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "PhoneLoginScreen" }]
+            });
+          }
+        }
+      });
+      return unsubscribe;
+    }, []);
+
+    useEffect(() => {
+      const checkReferral = async () => {
+        const url = await Linking.getInitialURL();
+        if (url && url.includes('ref=')) {
+          const refCode = url.split('ref=')[1].split('&')[0];
+          console.log('🔗 Referral code detected:', refCode);
+          await AsyncStorage.setItem('@referrer_uid', refCode);
+        }
+      };
+      checkReferral();
+    }, []);
+
+    const applyReferralIfAny = async (myUid) => {
+      try {
+        const refUid = await AsyncStorage.getItem('@referrer_uid');
+        if (!refUid) return;
+    
+        console.log('🎁 Applying referral from:', refUid);
+    
+        const db = getFirestore();
+        const userRef = doc(db, 'users', myUid);
+        const referrerRef = doc(db, 'users', refUid);
+    
+        const userSnap = await getDoc(userRef);
+        const alreadyRewarded = userSnap.exists() && userSnap.data()?.referralRewardGiven;
+        if (alreadyRewarded) return;
+    
+        // ✅ Give 50 coins to both users
+        await updateDoc(userRef, {
+          dharma_coins: increment(50),
+          referralRewardGiven: true,
+        });
+        await updateDoc(referrerRef, {
+          dharma_coins: increment(50),
+        });
+    
+        console.log('✅ Referral coins rewarded to both:', myUid, 'and', refUid);
+    
+        // Optional: clean up
+        await AsyncStorage.removeItem('@referrer_uid');
+        updateCoins(); // Refresh local display
+      } catch (e) {
+        console.error('❌ Referral reward error:', e);
+      }
+    };
+    
+
+  const handleInvitePress = () => {
+    const message = `🔮 Let's unlock our karmic bond on AstroVue! Tap to see what connects us astrologically:\nhttps://astrovue.page.link/invite?ref=${auth.currentUser?.uid || 'astro'}`;
+    Linking.openURL(`whatsapp://send?text=${encodeURIComponent(message)}`);
+  };
+
+  const handleEssenceShare = async () => {
+    try {
+      const uri = await viewShotRef.current.capture();
+      await Sharing.shareAsync(uri, {
+        dialogTitle: '🪞 Share your Astro Essence',
+      });
+    } catch (e) {
+      console.error('❌ Error sharing essence card:', e);
+    }
+  };
+
+
+
+// 
 
  
   const zone = dailyEnergy?.zone || 'Neutral';
@@ -223,10 +332,13 @@ export default function HomeScreen({ navigation }) {
         const storedStr = await AsyncStorage.getItem('@daily_energy');
         const storedDate = await AsyncStorage.getItem('@daily_energy_date');
         const today = new Date().toISOString().split('T')[0];
+
+        console.log("storedStr:", storedStr);
+        
   
         if (!storedStr || storedDate !== today) {
           console.log('📡 Refetching daily energy from API...');
-          await fetchAndStoreDailyEnergy(); // ← this function calls the API and updates storage
+          // await fetchAndStoreDailyEnergy(); // ← this function calls the API and updates storage
           await AsyncStorage.setItem('@daily_energy_date', today);
         } else {
           console.log('📦 Using cached daily energy');
@@ -236,10 +348,45 @@ export default function HomeScreen({ navigation }) {
         // Re-sync profile photo + name just in case
         const profileStr = await AsyncStorage.getItem('userProfile');
         const profile = JSON.parse(profileStr || '{}');
-        if (profile.photo) setProfilePhotoUrl(profile.photo);
+        if (profile.photo) {
+          setProfilePhotoUrl(profile.photo);
+        
+          // 🔧 Patch: If photo URL is local and not uploaded, upload it
+          if (profile.photo.startsWith('file://')) {
+            console.log('🛠 Uploading profile image from HomeScreen...');
+
+            // 
+
+            // const photoUri = profile.photo; result.assets[0].uri;
+            const photoUri = profile.photo;
+            console.log('🖼️ 2 Picked test image:', photoUri);
+            const filename = photoUri.split('/').pop();
+            console.log('🖼️ filename test image:', filename);
+
+          
+
+            // Upload only if already signed in
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+              const url = await uploadProfileImage(photoUri, filename, (v) => console.log(v));
+              console.log('✅ Uploaded and updated photo URL:', url);
+            } else {
+              console.log('⏭️ Skipping local photo upload — user not yet signed in');
+            }
+
+   
+
+
+            // 
+            // await uploadProfileImage(profile.photo);
+          }
+        }
         if (profile.name) setUserName(profile.name);
         const coinStr = await AsyncStorage.getItem('@wallet_dharma_coins');
         setCoinBalance(parseInt(coinStr || '0'));
+
+         // 🎁 Apply referral rewards (only once)
+      if (auth.currentUser) await applyReferralIfAny(auth.currentUser.uid);
 
       };
   
@@ -342,37 +489,37 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
   try {
     console.log('📸 Selected URI:', uri);
 
-    // STEP 1: Anonymous sign-in (if not already signed in)
+    // STEP 1: Use existing signed-in user (custom token from OTP login)
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn('⚠️ uploadProfileImage: no signed-in user');
+        return null;
+      }
+      const idToken = await currentUser.getIdToken();
+      const uid = currentUser.uid;
 
-      const userCred = await signInAnonymously(
-        auth
-      );
-      const idToken = await userCred.user.getIdToken();
-      const uid = userCred.user.uid;
-
-   
-      
-    
-      console.log('🔐 Anonymous sign-in complete. UID:', uid);
+      console.log('🔐 Signed-in user UID:', uid);
 
    
       console.log('🔑 ID Token:', idToken); // Optional: use for secure API calls
     
 
     // STEP 2: Compress image
-    const compressed = await ImageManipulator.manipulateAsync(
-      uri,
-      [{ resize: { width: 512 } }],
-      {
-        compress: 0.7,
-        format: ImageManipulator.SaveFormat.PNG,
-      }
-    );
-    console.log('🗜️ Compressed URI:', compressed.uri);
+    // const compressed = await ImageManipulator.manipulateAsync(
+    //   uri,
+    //   [{ resize: { width: 512 } }],
+    //   {
+    //     compress: 0.7,
+    //     format: ImageManipulator.SaveFormat.PNG,
+    //   }
+    // );
+    console.log('🗜️ Compressed URI:', uri);
 
     // STEP 3: Convert to blob
-    const response = await fetch(compressed.uri);
+    const response = await fetch(uri);
+    console.log('✅ response:', response);
     const blob = await response.blob();
+    console.log('✅ blob:', blob);
     console.log('✅ Blob created, size:', blob.size);
 
     // STEP 4: Upload to Firebase Storage under avatars/{uid}/
@@ -453,96 +600,106 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
     }
   };
 
-  //
-    useEffect(() => {
-      const authenticateAndFetchDailyEnergy = async () => {
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        // 1. Load profile
+        const profileStr = await AsyncStorage.getItem('userProfile');
+        if (!profileStr) { console.log('No profile, skipping fetch'); return; }
+        const profile = JSON.parse(profileStr);
+
+        const name = profile?.name || 'Unknown';
+        const photo = profile?.photo || '';
+        const dob = profile?.dob?.split('T')[0] || '';
+        const pob = profile?.pob || '';
+        const social_handles = profile?.social_handles || {};
+
+        if (!dob || !pob) {
+          setError('Please complete your birth details in Settings → Edit Profile to view your daily energy.');
+          return;
+        }
+
+        let tob = '00:00';
+        if (typeof profile?.tob === 'string') {
+          if (profile.tob.length === 5 && profile.tob.includes(':')) {
+            tob = profile.tob;
+          } else if (profile.tob.includes('T')) {
+            tob = new Date(profile.tob).toISOString().split('T')[1].substring(0, 5);
+          }
+        }
+
+        // 2. Get phone number (stored during OTP)
+        const storedPhone = await AsyncStorage.getItem('@phoneNumber') ||
+          profile.phoneNumber ||
+          (profile.phone || '').replace(/^\+91/, '') || '';
+
+        // 3. Get a fresh Firebase ID token — always re-auth from backend
+        let idToken = null;
         try {
-          console.log('🌅 Fetching new daily energy...');
-      
-          // 1. Sign in
-          const userCred = await signInAnonymously(auth);
-          const idToken = await userCred.user.getIdToken(); 
-          const uid = userCred.user.uid;
-
-          
-      
-          // 2. Load profile
-          const profileStr = await AsyncStorage.getItem('userProfile');
-          const profile = JSON.parse(profileStr || '{}');
-          const name = profile?.name || 'Unknown';
-          const photo = profile?.photo || '';
-          // const dob = new Date(profile?.dob || '').toISOString().split('T')[0];
-          const dob = profile?.dob?.split('T')[0] || '';
-
-          const tob = new Date(profile?.tob || '').toTimeString().slice(0, 5);
-          const pob = profile?.pob || '';
-          const social_handles = profile?.social_handles || {};
-
-            // 3. ✅ Save user profile to Firestore (this was missing)
-       //    const db = getFirestore();
-          const userRef = doc(db, 'users', uid);
-          await setDoc(userRef, {
-            name,
-            photo,
-            dob,
-            tob,
-            pob,
-            search_name: name.toLowerCase(),
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-          console.log('📝 User profile saved to Firestore');
-      
-          // 3. Call daily energy API
-          const res = await fetch(`${BASE_URL}/api/daily-energy`, {
+          const tokenRes = await fetch(`${BASE_URL}/api/firebase-token`, {
             method: 'POST',
-            headers: {
-              Authorization: `Bearer ${idToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name, dob, tob, pob, photo, social_handles }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phoneNumber: storedPhone, countryCode: '91' }),
           });
-      
-          const json = await res.json();
-          console.log('✅ Daily Energy:', json);
-      
-          // 4. Save locally
-          setDailyEnergy(json);
-          await AsyncStorage.setItem('@daily_energy', JSON.stringify(json));
-          await AsyncStorage.setItem('@daily_energy_date', new Date().toISOString().split('T')[0]);
-      
-          // 5. Save to Firestore dailyLogs
-         // const db = getFirestore();
-          const today = new Date().toISOString().split('T')[0];
-          await setDoc(
-            doc(db, "users", uid, "dailyLogs", today),
-            {
-              dailyEnergy: json,
-              timestamp: new Date().toISOString()
-            },
-            { merge: true }
-          );
-      
-          console.log("📝 Daily energy saved to Firestore for", today);
-      
-          // 6. Streak logic
+          const tokenData = await tokenRes.json();
+          if (tokenData.token) {
+            const cred = await signInWithCustomToken(auth, tokenData.token);
+            idToken = await cred.user.getIdToken();
+            console.log('Firebase signed in, uid:', cred.user.uid);
+          }
+        } catch (authErr) {
+          console.warn('Token refresh failed:', authErr);
+          if (auth.currentUser) idToken = await auth.currentUser.getIdToken();
+        }
+
+        if (!idToken) { console.warn('No idToken, skipping dashboard fetch'); return; }
+
+        const uid = auth.currentUser?.uid || storedPhone;
+
+        // 4. Call daily energy API
+        console.log('Calling /api/daily-energy with:', { name, dob, tob, pob });
+        const res = await fetch(`${BASE_URL}/api/daily-energy`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, dob, tob, pob, photo, social_handles }),
+        });
+        const json = await res.json();
+        console.log('Daily Energy response:', JSON.stringify(json).substring(0, 200));
+
+        if (json.error) {
+          console.error('API error:', json.error, json.details);
+          setError(json.error === 'Birth data incomplete'
+            ? 'Please complete your birth details in Settings → Edit Profile to view your daily energy.'
+            : `API error: ${json.error}`);
+          return;
+        }
+
+        setDailyEnergy(json);
+        await AsyncStorage.setItem('@daily_energy', JSON.stringify(json));
+        await AsyncStorage.setItem('@daily_energy_date', new Date().toISOString().split('T')[0]);
+
+        // 5. Streak (non-critical — don't let Firestore permission errors crash dashboard)
+        try {
           await updateStreakTracker(uid);
           const streakData = await getStreakTracker(uid);
-          setStreakInfo({
-            current: streakData.currentStreak,
-            max: streakData.maxStreak,
-          });
-      
-          // 7. Optional
-          getUserChart();
-      
-        } catch (err) {
-          console.error('❌ Error in fetchAndStoreDailyEnergy:', err);
-          setError(err.message);
+          setStreakInfo({ current: streakData.currentStreak, max: streakData.maxStreak });
+        } catch (streakErr) {
+          console.warn('Streak update failed (non-critical):', streakErr.message);
         }
-      };
-      
-      authenticateAndFetchDailyEnergy();
-    }, []);
+
+        try {
+          getUserChart();
+        } catch (chartErr) {
+          console.warn('getUserChart failed (non-critical):', chartErr.message);
+        }
+      } catch (err) {
+        console.error('fetchDashboard error:', err.message);
+        setError(err.message);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
 
     const handleChangeProfileImage = async () => {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -640,24 +797,29 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
       platform: 'Instagram',
       image: InstagramIcon,
       caption: 'Align your week with the Moon 🌙 #AstroTips',
-      link: 'https://www.instagram.com/astrovue.official/'
+      link: 'https://www.instagram.com/kundlisutra/'
     },
     {
       platform: 'YouTube',
       image: YouTubeIcon,
       caption: 'New Rituals for Mars Transit 🔥',
-      link: 'https://www.youtube.com/@astrovue'
+      link: 'https://www.youtube.com/@kundlisutra?si=pUFVVdfd-47lvRqc'
     },
     {
       platform: 'Twitter (X)',
       image: TwitterIcon,
       caption: 'Your Dasha is your destiny. Know it, own it. 🕉️',
-      link: 'https://twitter.com/astrovueapp'
+      link: 'https://x.com/KundliSutra'
     }
   ];
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+    {error && (
+      <View style={{ backgroundColor: '#FFF3CD', borderRadius: 10, margin: 16, padding: 16 }}>
+        <Text style={{ color: '#856404', fontSize: 14, textAlign: 'center' }}>{error}</Text>
+      </View>
+    )}
     {profilePhotoUrl && (
      
       <LinearGradient
@@ -690,6 +852,10 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
           </TouchableOpacity>
         </View>
       </LinearGradient>
+
+     
+
+      
       
 )}
 
@@ -748,6 +914,39 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
   </View>
   </LinearGradient>
 
+  <View style={{ marginBottom: 16 }}>
+  {/* 🚀 Invite Button */}
+  <TouchableOpacity
+    style={{ padding: 10, backgroundColor: '#e0f7fa', borderRadius: 10 }}
+    onPress={handleInvitePress}
+  >
+    <Text style={{ fontWeight: '600', textAlign: 'center' }}>📩 Invite via WhatsApp</Text>
+  </TouchableOpacity>
+  </View>
+
+  {/* 🏠 Vastu Scanner — standalone horizontal card */}
+  <TouchableOpacity
+    onPress={() => navigation.navigate("VastuScanner")}
+    activeOpacity={0.85}
+    style={{
+      backgroundColor: '#1a0a3a',
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: '#7c3aed',
+      padding: 16,
+      marginBottom: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+    }}
+  >
+    <Text style={{ fontSize: 36, marginRight: 14 }}>{"🏠"}</Text>
+    <View style={{ flex: 1 }}>
+      <Text style={{ color: '#c4b5fd', fontSize: 16, fontWeight: '800', marginBottom: 4 }}>{"Vastu Scanner"}</Text>
+      <Text style={{ color: '#a78bfa', fontSize: 13, lineHeight: 18 }}>{"Point camera around your room → live direction detection → personalised Vastu remedies"}</Text>
+    </View>
+    <Text style={{ color: '#7c3aed', fontSize: 22, marginLeft: 8 }}>{"›"}</Text>
+  </TouchableOpacity>
+
 
 
       {/* <View style={styles.featureCardWrapper}>
@@ -771,7 +970,7 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
   end={{ x: 1, y: 1 }}
   style={[styles.sectionWrap, { padding: 12, borderRadius: 16, marginBottom: 16 }]}
 >
-  <Text style={styles.section}>🌌 Today’s Celestial Pulse</Text>
+  <Text style={styles.section}>🌌 Today's Celestial Pulse</Text>
 
   <Text style={styles.zoneHint}>
     💡 Your Zone Alaysis from Energy Dashboard: These insights reflect your current zone, moon sign & planetary influences.
@@ -788,7 +987,7 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
     >
       <TouchableOpacity onPress={() => navigation.navigate('CelestialPulse')}>
         <Text style={styles.cardTitle}>🔭 Your Planetary Pulse</Text>
-        <Text style={styles.cardSub}>Tap to uncover what’s unfolding today for you.</Text>
+        <Text style={styles.cardSub}>Tap to uncover what's unfolding today for you.</Text>
       </TouchableOpacity>
     </Animated.View>
 
@@ -807,7 +1006,7 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
     </Animated.View>
   </View>
   </LinearGradient>
-}
+
 
 <LinearGradient
   colors={['#fff5f6', '#ffd6f3']}
@@ -843,7 +1042,7 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
 
     <TouchableOpacity style={[styles.gridCard, { backgroundColor: '#fff0f2' }]} onPress={() => nav('AstroLove')}>
       <Text style={styles.cardTitle}>💕 AstroLove</Text>
-      <Text style={styles.cardSub}>Today’s vibe + compatibility + rituals</Text>
+      <Text style={styles.cardSub}>Today's vibe + compatibility + rituals</Text>
     </TouchableOpacity>
   </View>
 </LinearGradient>
@@ -955,6 +1154,17 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
 
       <TouchableOpacity
         onPress={async () => {
+          const result = await DharmaCoin.addCoins(50, 'Manual Test Recharge');
+          console.log('✅ Coins after add:', result);
+        }}
+        style={{ backgroundColor: '#4caf50', padding: 12, borderRadius: 8, margin: 20 }}
+      >
+        <Text style={{ color: 'white', textAlign: 'center' }}>Test Add 50 Coins</Text>
+      </TouchableOpacity>
+
+
+      <TouchableOpacity
+        onPress={async () => {
           const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -969,6 +1179,7 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
             const filename = photoUri.split('/').pop();
             console.log('🖼️ filename test image:', filename);
             const uid = auth.currentUser?.uid;
+            log('🖼️ 2 User ID:', uid);
             if (!uid) {
               alert('User not logged in');
               return;
@@ -984,7 +1195,7 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
       </TouchableOpacity>
 
 
-      <View style={[styles.sectionWrap, { marginTop: 24 }]}>
+      {/* <View style={[styles.sectionWrap, { marginTop: 24 }]}>
         <Text style={styles.section}>📲 AstroVue Social Feed</Text>
         {mockPosts.map((item, index) => (
           <TouchableOpacity
@@ -997,6 +1208,26 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
             <Text style={styles.cardSub}>{item.caption}</Text>
           </TouchableOpacity>
         ))}
+      </View> */}
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        marginTop: 30,
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderColor: '#ccc'
+      }}>
+        <TouchableOpacity onPress={() => Linking.openURL('https://www.instagram.com/kundlisutra/')}>
+          <Icon name="instagram" size={24} color="#C13584" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => Linking.openURL('https://www.youtube.com/@kundlisutra?si=pUFVVdfd-47lvRqc')}>
+          <Icon name="youtube-play" size={24} color="#FF0000" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => Linking.openURL('https://x.com/KundliSutra')}>
+          <Icon name="twitter" size={24} color="#000" />
+        </TouchableOpacity>
+       
       </View>
     </ScrollView>
   );

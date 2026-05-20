@@ -13,8 +13,9 @@ import { BASE_URL } from "../config/constants";
   import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
   import { LineChart } from 'react-native-chart-kit';
   import { Button, Icon } from 'react-native-elements';
-  import { API_TOKEN } from '../config/apiConfig';
   import { Image, Linking } from 'react-native';
+  import AsyncStorage from '@react-native-async-storage/async-storage';
+  import { auth } from '../config/firebase';
 
   // const BASE_URL = 'http://192.168.1.13:8080';
 
@@ -43,14 +44,28 @@ import { BASE_URL } from "../config/constants";
     useEffect(() => {
       const fetchAstroAlert = async () => {
         try {
-          const response = await fetch("${BASE_URL}/api/astro-alert", {
+          const profileStr = await AsyncStorage.getItem('userProfile');
+          const profile = JSON.parse(profileStr || '{}');
+          const dob = profile?.dob?.split('T')[0] || '';
+          const tob = profile?.tob || '00:00';
+          const pob = profile?.pob || '';
+          const name = profile?.name || 'User';
+          const user = auth.currentUser;
+          const idToken = user ? await user.getIdToken() : null;
+          if (!idToken) throw new Error('Not signed in');
+
+          const response = await fetch(`${BASE_URL}/api/astro-alert`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${API_TOKEN}`
+              Authorization: `Bearer ${idToken}`
             },
             body: JSON.stringify({
               user_id: userId,
+              dob,
+              tob,
+              pob,
+              name,
               date: new Date().toISOString().split("T")[0],
               full: true
             })
@@ -83,15 +98,24 @@ import { BASE_URL } from "../config/constants";
       try {
         setAIResponse("Loading...");
         setRecommendedProduct(null); // Clear previous product card
-        const response = await fetch("https://kundli-api-812108926556.asia-south1.run.app/api/ask-ai", {
+        const profileStr = await AsyncStorage.getItem('userProfile');
+        const profile = JSON.parse(profileStr || '{}');
+        const user = auth.currentUser;
+        const idToken = user ? await user.getIdToken() : null;
+        const response = await fetch(`${BASE_URL}/api/ask-ai`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${API_TOKEN}`
+            ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
           },
           body: JSON.stringify({
-            user_id: userId,
+            user_id: profile.email || userId,
             question,
+            my_dob: profile?.dob?.split('T')[0] || '',
+            my_tob: profile?.tob || '00:00',
+            my_pob: profile?.pob || '',
+            my_name: profile?.name || 'User',
+            context: { topic: 'general' },
             date: new Date().toISOString().split("T")[0]
           })
         });

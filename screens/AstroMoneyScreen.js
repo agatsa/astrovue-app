@@ -1,12 +1,13 @@
 import { BASE_URL } from "../config/constants";
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, StatusBar } from 'react-native';
+import ScreenHeader from '../components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from '../config/firebase';
 
 // const BASE_URL = 'http://192.168.1.13:8080';
 
-export default function AstroMoneyScreen() {
+export default function AstroMoneyScreen({ navigation }) {
   const [moneyAdvice, setMoneyAdvice] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -127,7 +128,10 @@ export default function AstroMoneyScreen() {
     );
   }
 
+  const topPad = StatusBar.currentHeight || 0;
   return (
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <ScreenHeader title="Astro Money" navigation={navigation} />
     <ScrollView style={styles.container}>
       <Text style={styles.title}>💰 AstroMoney Guidance</Text>
 
@@ -173,6 +177,7 @@ export default function AstroMoneyScreen() {
         <Text>Since: {moneyAdvice.activationDate}</Text>
       </View>
     </ScrollView>
+    </View>
   );
 }
 

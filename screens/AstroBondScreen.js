@@ -1,5 +1,10 @@
 import { BASE_URL } from "../config/constants";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+
+import ViewShot from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { Linking } from 'react-native';
+
 
 
 import {
@@ -111,12 +116,16 @@ export default function AstroBondScreen({ route, navigation }) {
   const [emotionalTriggers, setEmotionalTriggers] = useState('');
   const [approachAdvice, setApproachAdvice] = useState('');
   const [personalityLoading, setPersonalityLoading] = useState(false);
+
+  const bondShotRef = useRef();
+
   
 
 
   const loadDailyEnergy = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('@daily_energy');
+      console.log('🔮 Loaded myDailyEnergy in AstroBond:', jsonValue);
       if (jsonValue != null) {
         const parsed = JSON.parse(jsonValue);
         console.log('🔮 Loaded myDailyEnergy in AstroBond:', parsed);
@@ -145,7 +154,7 @@ export default function AstroBondScreen({ route, navigation }) {
 
       try {
         const token = await getAuth().currentUser.getIdToken();
-
+        console.log("🔑 Using token:", token);
         const myUid = getAuth().currentUser?.uid;
 
         console.log('🔮 Loaded myUid in AstroBond:', myUid);
@@ -159,6 +168,8 @@ export default function AstroBondScreen({ route, navigation }) {
           console.warn("⚠️ Missing myDOB/myTOB/myPOB, aborting.");
           return;
         }
+        console.log("personId:", personId);
+        
 
         const profileRes = await fetch(`${BASE_URL}/api/get-connected-user-profile`, {
           method: "POST",
@@ -533,6 +544,21 @@ export default function AstroBondScreen({ route, navigation }) {
   
 
   if (!person) return null;
+
+  const handleBondShare = async () => {
+    try {
+      const uri = await viewShotRef.current.capture();
+      const message = `🔮 Explore our Cosmic Bond on AstroVue!\nhttps://astrovue.page.link/invite?ref=${auth.currentUser?.uid || 'astro'}`;
+      await Sharing.shareAsync(uri, {
+        dialogTitle: '✨ Share Your AstroBond',
+        UTI: 'public.image',
+        mimeType: 'image/jpeg',
+      });
+    } catch (e) {
+      console.error('❌ Bond share failed:', e);
+    }
+  };
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>

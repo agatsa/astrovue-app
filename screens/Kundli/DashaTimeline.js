@@ -1,116 +1,215 @@
-// import { BASE_URL } from "../config/constants";
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-
-const mockDasha = [
-  {
-    maha: 'Moon',
-    start: '2020-01-01',
-    end: '2030-01-01',
-    antars: [
-      { antar: 'Moon', start: '2020-01-01', end: '2021-02-01' },
-      { antar: 'Mars', start: '2021-02-01', end: '2022-03-01' },
-      { antar: 'Rahu', start: '2022-03-01', end: '2023-04-01' },
-      { antar: 'Jupiter', start: '2023-04-01', end: '2024-06-01' },
-      { antar: 'Saturn', start: '2024-06-01', end: '2025-07-01' },
-    ]
-  },
-  {
-    maha: 'Mars',
-    start: '2030-01-01',
-    end: '2037-01-01',
-    antars: [
-      { antar: 'Mars', start: '2030-01-01', end: '2031-02-01' },
-      { antar: 'Rahu', start: '2031-02-01', end: '2032-03-01' },
-    ]
-  }
-];
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function DashaTimeline() {
-  const [dashaData, setDashaData] = useState([]);
+  const [chart, setChart] = useState(null);
+  const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setDashaData(mockDasha);
-      setLoading(false);
-    }, 400);
+    const fetchDashaData = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('@daily_energy');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          console.log("parsed",parsed);
+         
+          setChart(parsed.user_Chart);
+          setSummary(parsed.gpt_summary || '');
+        }
+      } catch (err) {
+        console.error('❌ AsyncStorage Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashaData();
   }, []);
+
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return 'Invalid';
+    return d.toISOString().slice(0, 10);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#FF6F61" />
+        <Text style={styles.loaderText}>Fetching your cosmic data...</Text>
+      </View>
+    );
+  }
+
+  if (!chart) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>No Dasha data available.</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>\uD83D\uDD52 Your Dasha Timeline</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#d9822b" style={{ marginTop: 40 }} />
-      ) : (
-        dashaData.map((maha, i) => (
-          <View key={i} style={styles.card}>
-            <Text style={styles.sectionTitle}>Mahadasha: {maha.maha}</Text>
-            <Text style={styles.dates}>{maha.start} to {maha.end}</Text>
-            {maha.antars.map((antar, j) => (
-              <View key={j} style={styles.antarBlock}>
-                <Text style={styles.antarName}>{antar.antar} Antardasha</Text>
-                <Text style={styles.antarDates}>{antar.start} → {antar.end}</Text>
-              </View>
-            ))}
-          </View>
-        ))
-      )}
+      <Animated.Text entering={FadeIn.duration(500)} style={styles.title}>
+        <Icon name="clock-outline" size={24} color="#FF6F61" /> Your Dasha Timeline
+      </Animated.Text>
+
+      {/* Dasha Blocks */}
+      {[
+        {
+          label: 'Mahadasha',
+          name: chart.mahadasha,
+          start: chart.mahadasha_start,
+          end: chart.mahadasha_end,
+        },
+        {
+          label: 'Antardasha',
+          name: chart.antardasha,
+          start: chart.antardasha_start,
+          end: chart.antardasha_end,
+        },
+        {
+          label: 'Pratyantar',
+          name: chart.pratyantar,
+          start: chart.pratyantar_start,
+          end: chart.pratyantar_end,
+        },
+        {
+          label: 'Sookshma',
+          name: chart.sookshma,
+          start: chart.sookshma_start,
+          end: chart.sookshma_end,
+        },
+      ].map((dashaItem, index) => (
+        <Animated.View
+          entering={FadeInDown.delay(index * 200)}
+          key={index}
+          style={styles.card}
+        >
+          <Text style={styles.sectionTitle}>{dashaItem.label}: {dashaItem.name}</Text>
+          <Text style={styles.dates}>
+            <Icon name="calendar" size={16} color="#4A90E2" />{' '}
+            {formatDate(dashaItem.start)} → {formatDate(dashaItem.end)}
+          </Text>
+        </Animated.View>
+      ))}
+
+      {/* Other Astro Info */}
+      <Animated.View entering={FadeInDown.delay(900)} style={styles.card}>
+        <Text style={styles.sectionTitle}>Additional Information</Text>
+        <Text style={styles.meta}>Ascendant Sign: {chart.ascendant_sign}</Text>
+        <Text style={styles.meta}>Moon Sign: {chart.moon_sign}</Text>
+        <Text style={styles.meta}>Nakshatra: {chart.nakshatra}</Text>
+        <Text style={styles.meta}>Pada: {chart.pada}</Text>
+        <Text style={styles.meta}>Sun Longitude: {chart.sun_longitude.toFixed(2)}</Text>
+      </Animated.View>
+
+      {/* GPT Summary */}
+      {summary ? (
+        <Animated.View entering={FadeInDown.delay(1000)} style={styles.summaryCard}>
+          <Text style={styles.sectionTitle}>✨ Daily Energy Summary</Text>
+          <Text style={styles.summaryText}>{summary}</Text>
+        </Animated.View>
+      ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 20,
-    paddingHorizontal: 15,
-    backgroundColor: '#fefbf6',
-    alignItems: 'center'
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    backgroundColor: '#F8F1E9',
+    alignItems: 'center',
+    minHeight: '100%',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#2D3748',
+    marginBottom: 25,
+    textAlign: 'center',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  loaderText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#4A90E2',
+    fontWeight: '500',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
   },
   card: {
-    width: '95%',
-    backgroundColor: '#fff8e7',
-    borderRadius: 14,
-    padding: 15,
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6F61',
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3
+    elevation: 4,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#d9822b',
-    marginBottom: 6
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2D3748',
+    marginBottom: 6,
   },
   dates: {
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 10
-  },
-  antarBlock: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#eee'
-  },
-  antarName: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333'
+    color: '#718096',
   },
-  antarDates: {
-    fontSize: 12,
-    color: '#666'
-  }
+  meta: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 4,
+  },
+  summaryCard: {
+    width: '100%',
+    backgroundColor: '#FFFBEA',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 30,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ECC94B',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  summaryText: {
+    fontSize: 15,
+    color: '#4A4A4A',
+    lineHeight: 22,
+    marginTop: 8,
+  },
 });

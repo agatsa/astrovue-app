@@ -14,6 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 export default function Step5EmailScreen({ navigation, route }) {
   const { name, dob, tob, pob, lat, lon } = route.params; 
   const [email, setEmail] = useState('');
+  const {phoneNumber, countryCode } = route.params || {};
+
 
   const validateEmail = (email) =>
     /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email);
@@ -25,8 +27,10 @@ export default function Step5EmailScreen({ navigation, route }) {
       alert('Please enter a valid email address');
     } else {
       navigation.navigate('Step6Photo', {
-        name, dob, tob, pob, lat, lon, email
+        ...route.params,
+        email,
       });
+      
     }
   };
 

@@ -13,6 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 export default function Step2DobScreen({ navigation, route }) {
   const [dob, setDob] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
+  const { phoneNumber, countryCode, name } = route.params || {};
+
 
   const handleBack = () => navigation.goBack();
 
@@ -31,8 +33,8 @@ export default function Step2DobScreen({ navigation, route }) {
     const formattedDob = `${yyyy}-${mm}-${dd}T00:00`; // No timezone shift
   
     navigation.navigate('Step3Tob', {
-      name: route.params.name,
-      dob: formattedDob,
+      ...route.params,
+      dob: formattedDob,  
     });
   };
   

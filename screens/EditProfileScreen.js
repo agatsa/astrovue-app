@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, StyleSheet, Image, TouchableOpacity,
-  Alert, ScrollView, Button, Platform, KeyboardAvoidingView
+  Alert, ScrollView, Button, Platform, KeyboardAvoidingView, Pressable,
+  StatusBar, SafeAreaView,
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { getAuth } from 'firebase/auth';
-const auth = getAuth();          // make sure Firebase is already initialised
-
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
 import * as ImageManipulator from 'expo-image-manipulator';
 
-import { signInAnonymously } from 'firebase/auth';
+const GEOAPIFY_KEY = 'e9f6e35190004f1084145df8814cecf9';
 
-
+const auth = getAuth();
 
 export default function EditProfileScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -31,229 +28,60 @@ export default function EditProfileScreen({ navigation }) {
   const [lon, setLon] = useState(null);
   const [placeSelected, setPlaceSelected] = useState(false);
   const [placeSuggestions, setPlaceSuggestions] = useState([]);
-
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [savedPhone, setSavedPhone] = useState('');
+  const [bio, setBio] = useState('');
+  const [services, setServices] = useState('');
+  const [website, setWebsite] = useState('');
 
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
-        // 1. Firebase Auth user
         const fbUser = auth.currentUser;
-        console.log('🧾 Firebase User:', fbUser);
-  
-        // 2. Load profile
         const profileStr = await AsyncStorage.getItem('userProfile');
         const profile = JSON.parse(profileStr || '{}');
-  
-        const nameVal = profile?.name || fbUser?.displayName || 'Unknown';
+
+        const nameVal = profile?.name || fbUser?.displayName || '';
         const photoVal = profile?.photo || fbUser?.photoURL || '';
-        const dobVal = profile?.dob ? new Date(profile?.dob).toISOString().split('T')[0] : '';
-        const tobVal = typeof profile?.tob === 'string' && profile.tob.includes(':') ? profile.tob : '00:00';
+        const dobVal = profile?.dob ? new Date(profile.dob).toISOString().split('T')[0] : '';
+        const tobVal = typeof profile?.tob === 'string' && profile.tob.includes(':') ? profile.tob : '';
 
-        console.log('✅ Loaded tobVal:', tobVal);
-        
-        const tobFormatted = tob instanceof Date
-  ? tob.toTimeString().slice(0, 5)
-  : typeof tob === 'string' && tob.includes(':')
-    ? tob
-    : '00:00';
-
-    console.log('✅ Loaded tobFormatted:', tobFormatted);
-
-
-        const pobVal = profile?.pob || '';
-  
         setName(nameVal);
         setImage(photoVal);
         setDob(dobVal);
         setTob(tobVal);
-        setPob(pobVal);
-  
+        setPob(profile?.pob || '');
+        setSavedPhone(profile?.phone || profile?.phoneNumber || '');
+        setBio(profile?.bio || '');
+        setServices(profile?.services || '');
+        setWebsite(profile?.website || '');
+
         if (profile?.lat) setLat(profile.lat);
         if (profile?.lon) setLon(profile.lon);
-  
-        console.log('✅ Loaded from userProfile:', profile);
-  
-        // 3. Save user profile to Firestore
-        if (fbUser?.uid) {
-          const db = getFirestore();
-          const userRef = doc(db, 'users', fbUser.uid);
-          await setDoc(userRef, {
-            name: nameVal,
-            photo: photoVal,
-            dob: dobVal,
-            pob: pobVal,
-            search_name: nameVal.toLowerCase(),
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-          console.log('📝 User profile saved to Firestore');
-        }
+        if (profile?.pob) setPlaceSelected(true);
       } catch (err) {
         console.error('❌ Failed to load profile:', err);
       }
     };
-  
+
     loadUserProfile();
   }, []);
 
-
-//   const handleChangeProfileImage = async () => {
-//     const result = await ImagePicker.launchImageLibraryAsync({
-//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//       allowsEditing: true,
-//       quality: 1,
-//     });
-
-//     if (!result.canceled) {
-//       const uri = result.assets[0].uri;
-//       const { downloadUrl } = await uploadProfileImage(uri, 'profile.png');
-
-//       // 🔁 Update AsyncStorage
-//       const profileStr = await AsyncStorage.getItem('userProfile');
-//       const profile = JSON.parse(profileStr || '{}');
-//       const updated = { ...profile, photo: downloadUrl };
-//       await AsyncStorage.setItem('userProfile', JSON.stringify(updated));
-
-//       setProfilePhotoUrl(downloadUrl);
-//       console.log('✅ New profile image uploaded and applied.');
-//     }
-//   };
-  
-const uploadProfileImage = async (uri, filename, onProgress) => {
-    try {
-      console.log('📸 Selected URI:', uri);
-  
-      // STEP 1: Anonymous sign-in (if not already signed in)
-  
-        const userCred = await signInAnonymously(
-          auth
-        );
-        const idToken = await userCred.user.getIdToken();
-        const uid = userCred.user.uid;
-  
-     
-        
-      
-        console.log('🔐 Anonymous sign-in complete. UID:', uid);
-  
-     
-        console.log('🔑 ID Token:', idToken); // Optional: use for secure API calls
-      
-  
-      // STEP 2: Compress image
-      const compressed = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ resize: { width: 512 } }],
-        {
-          compress: 0.7,
-          format: ImageManipulator.SaveFormat.PNG,
-        }
-      );
-      console.log('🗜️ Compressed URI:', compressed.uri);
-  
-      // STEP 3: Convert to blob
-      const response = await fetch(compressed.uri);
-      const blob = await response.blob();
-      console.log('✅ Blob created, size:', blob.size);
-  
-      // STEP 4: Upload to Firebase Storage under avatars/{uid}/
-      const storage = getStorage(undefined, "gs://kundli-auth-test.firebasestorage.app");
-      const imageRef = ref(storage, `avatars/${uid}/profile.png`);
-      await uploadBytes(imageRef, blob);
-  
-      // STEP 5: Get public download URL
-      const downloadUrl = await getDownloadURL(imageRef);
-      console.log('✅ Upload successful. URL:', downloadUrl);
-  
-      // const finalPhotoURL = downloadUrl;
-  
-      return { downloadUrl, uid };
-    } catch (e) {
-      console.error('❌ Upload failed:', e);
-      throw e;
-    }
-  };
-  
-  const uploadImageToFirebase = async (uri) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-  
-      const uid = getAuth().currentUser?.uid;
-      if (!uid) throw new Error('No UID found');
-  
-      const storage = getStorage();
-      const fileRef = ref(storage, `profileImages/${uid}.jpg`);
-      await uploadBytes(fileRef, blob);
-      const downloadURL = await getDownloadURL(fileRef);
-  
-      setImage(downloadURL); // update image state
-      return downloadURL;
-    } catch (err) {
-      console.error('❌ Upload failed:', err);
-      return null;
-    }
-  };
-  
-  
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-  
-    if (!result.canceled && result.assets.length > 0) {
-      const photoUri = result.assets[0].uri;
-      const filename = photoUri.split('/').pop();
-  
-      const { downloadUrl } = await uploadProfileImage(photoUri, filename, (v) => console.log(v));
-  
-      if (downloadUrl) {
-        setImage(downloadUrl); // ✅ Update state for preview
-  
-        // 🔁 Update in AsyncStorage too
-        const profileStr = await AsyncStorage.getItem('userProfile');
-        const profile = JSON.parse(profileStr || '{}');
-        const updated = { ...profile, photo: downloadUrl };
-        await AsyncStorage.setItem('userProfile', JSON.stringify(updated));
-        console.log('✅ Updated profile with new photo URL:', downloadUrl);
-      }
-    }
-  };
-  
-
-  const handleDateConfirm = (date) => {
-    const iso = date.toISOString();
-    setDob(iso.split('T')[0]);
-    setShowDatePicker(false);
-  };
-
-  const handleTimeConfirm = (selectedTime) => {
-    const timeStr = selectedTime.toTimeString().slice(0, 5); // "HH:MM"
-    setTob(timeStr);
-    setShowTimePicker(false);
-  };
-  
-
-  const fetchLocationDetails = async (placeName) => {
-    setPob(placeName);
+  const fetchLocationDetails = async (text) => {
+    setPob(text);
     setLat(null);
     setLon(null);
     setPlaceSelected(false);
     setPlaceSuggestions([]);
-    if (placeName.length < 3) return;
+    if (text.length < 3) return;
 
     try {
       const res = await fetch(
-        `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(placeName)}&apiKey=e9f6e35190004f1084145df8814cecf9`
+        `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text)}&apiKey=${GEOAPIFY_KEY}`
       );
       const data = await res.json();
-      if (data.features) {
-        setPlaceSuggestions(data.features);
-      }
+      if (data.features) setPlaceSuggestions(data.features);
     } catch (e) {
       console.log('GeoAPI error:', e);
     }
@@ -267,102 +95,139 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
     setPlaceSuggestions([]);
   };
 
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const photoUri = result.assets[0].uri;
+      const filename = photoUri.split('/').pop();
+      const { downloadUrl } = await uploadProfileImage(photoUri, filename);
+
+      if (downloadUrl) {
+        setImage(downloadUrl);
+        const profileStr = await AsyncStorage.getItem('userProfile');
+        const profile = JSON.parse(profileStr || '{}');
+        await AsyncStorage.setItem('userProfile', JSON.stringify({ ...profile, photo: downloadUrl }));
+      }
+    }
+  };
+
+  const uploadProfileImage = async (uri, filename) => {
+    try {
+      const userCred = await signInAnonymously(auth);
+      const uid = userCred.user.uid;
+      const compressed = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 512 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.PNG }
+      );
+      const response = await fetch(compressed.uri);
+      const blob = await response.blob();
+      const storage = getStorage(undefined, 'gs://kundli-auth-test.firebasestorage.app');
+      const imageRef = ref(storage, `avatars/${uid}/profile.png`);
+      await uploadBytes(imageRef, blob);
+      const downloadUrl = await getDownloadURL(imageRef);
+      return { downloadUrl, uid };
+    } catch (e) {
+      console.error('❌ Upload failed:', e);
+      return {};
+    }
+  };
+
+  const handleTimeConfirm = (selectedTime) => {
+    if (selectedTime) {
+      const hh = selectedTime.getHours().toString().padStart(2, '0');
+      const mm = selectedTime.getMinutes().toString().padStart(2, '0');
+      setTob(`${hh}:${mm}`);
+    }
+    setShowTimePicker(false);
+  };
+
   const saveProfile = async () => {
-    if (!name || !dob || !tob || !pob || !image) {
-      Alert.alert('⚠️ Please complete all fields');
+    if (!name || !dob || !tob || !pob) {
+      Alert.alert('⚠️ Please complete all fields (Name, DOB, TOB, Place of Birth)');
       return;
     }
-  
-    try {
-      const uid = getAuth().currentUser?.uid;
-      if (!uid) throw new Error('No UID found');
+    if (!placeSelected || !lat || !lon) {
+      Alert.alert('⚠️ Please select your place of birth from the suggestions list');
+      return;
+    }
 
-     
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error('Not signed in');
+
+      const existingProfileStr = await AsyncStorage.getItem('userProfile');
+      const existingProfile = JSON.parse(existingProfileStr || '{}');
+
       const profileData = {
+        ...existingProfile,
         name,
-        photo: image,
-        dob: typeof dob === 'string' ? dob : (dob instanceof Date ? dob.toISOString().split('T')[0] : ''),
+        photo: image || existingProfile.photo || '',
+        dob,
+        tob,
         pob,
         lat,
         lon,
+        bio,
+        services,
+        website,
         updatedAt: new Date().toISOString(),
       };
-      
-      
-      console.log('✅ Saved to AsyncStorage:', profileData);
-  
-      // Save to AsyncStorage
-      await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
-      console.log('✅ Saved to AsyncStorage:', profileData);
 
-    //   if (tob === 'Inval' || !tob.includes(':')) {
-    //     Alert.alert('❌ Invalid TOB', 'Please select a valid time of birth.');
-    //     return;
-    //   }
-      
-      const { tob, ...profileDataWithoutTOB } = profileData;
-  
-      // Save to Firestore
+      await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
+
       const db = getFirestore();
       const userRef = doc(db, 'users', uid);
       await setDoc(userRef, {
-        ...profileDataWithoutTOB,
-        search_name: name.toLowerCase(),
+        ...profileData,
+        search_name: name.toLowerCase()
       }, { merge: true });
-      console.log('✅ Saved to Firestore');
-  
-      Alert.alert('✅ Profile updated!');
+
+      Alert.alert('✅ Profile updated! Your dashboard will now load.');
+      navigation.goBack();
     } catch (err) {
       console.error('❌ Save error:', err);
-      Alert.alert('❌ Failed to save profile');
+      Alert.alert('❌ Failed to save profile', err.message);
     }
   };
-  
-  
+
+  const topPad = StatusBar.currentHeight || 0;
 
   return (
-    <KeyboardAvoidingView
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    style={{ flex: 1 }}
-    keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-  >
-    <>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* Header with back button */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: topPad + 10, paddingBottom: 14, borderBottomWidth: 0.5, borderBottomColor: '#E5E5E5', backgroundColor: '#fff' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4, marginRight: 12 }}>
+          <Text style={{ fontSize: 26, color: '#333', lineHeight: 30 }}>‹</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 17, fontWeight: '700', color: '#1A1A2E' }}>Edit Profile</Text>
+      </View>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.header}>Edit Profile</Text>
 
         <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
-          {image ? (
-            <Image source={{ uri: image }} style={styles.avatar} />
-          ) : (
-            <View style={styles.placeholder}><Text>Select Image</Text></View>
-          )}
+          {image
+            ? <Image source={{ uri: image }} style={styles.avatar} />
+            : <View style={styles.placeholder}><Text>Select Image</Text></View>}
           <Text style={styles.editPhotoText}>Change Profile Photo</Text>
         </TouchableOpacity>
-  
 
         <Text style={styles.label}>Name</Text>
         <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Enter your name" />
 
         <Text style={styles.label}>Date of Birth</Text>
         <Pressable onPress={() => setShowDatePicker(true)}>
-          <TextInput
-            style={styles.input}
-            value={dob}
-            editable={false}
-            placeholder="Select DOB"
-            pointerEvents="none"
-          />
+          <TextInput style={styles.input} value={dob} editable={false} placeholder="Tap to select DOB" />
         </Pressable>
 
         <Text style={styles.label}>Time of Birth</Text>
         <Pressable onPress={() => setShowTimePicker(true)}>
-          <TextInput
-            style={styles.input}
-            value={tob}
-            editable={false}
-            placeholder="Select TOB"
-            pointerEvents="none"
-          />
+          <TextInput style={styles.input} value={tob} editable={false} placeholder="Tap to select TOB" />
         </Pressable>
 
         <Text style={styles.label}>Place of Birth</Text>
@@ -370,62 +235,94 @@ const uploadProfileImage = async (uri, filename, onProgress) => {
           style={styles.input}
           value={pob}
           onChangeText={fetchLocationDetails}
-          placeholder="Start typing your place of birth"
+          placeholder="Type your city (e.g. Kanpur, India)"
         />
-
         {placeSuggestions.length > 0 && (
-          <ScrollView style={styles.suggestions}>
+          <View style={styles.suggestionBox}>
             {placeSuggestions.map((item, index) => (
-              <TouchableOpacity key={index} onPress={() => handlePlaceSelect(item)} style={styles.suggestionItem}>
+              <TouchableOpacity
+                key={index}
+                style={styles.suggestionItem}
+                onPress={() => handlePlaceSelect(item)}
+              >
                 <Text>{item.properties.formatted}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         )}
-
         {placeSelected && lat && lon && (
-          <Text style={styles.coordinates}>📍 {lat.toFixed(4)}, {lon.toFixed(4)}</Text>
+          <Text style={styles.coordinates}>📍 {parseFloat(lat).toFixed(4)}, {parseFloat(lon).toFixed(4)}</Text>
         )}
 
-        <View style={{ marginTop: 24 }}>
-          <Button title="💾 Save Profile" onPress={saveProfile} />
+        {/* ── Profile section ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>✨ Your Public Profile</Text>
+          <Text style={styles.sectionSub}>Visible to others on the social feed</Text>
         </View>
+
+        <Text style={styles.label}>Bio</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={bio}
+          onChangeText={setBio}
+          placeholder="Tell the community about yourself — your astrological journey, insights, or what you love about Jyotish..."
+          placeholderTextColor="#ABABAB"
+          multiline
+          maxLength={200}
+          numberOfLines={4}
+        />
+        <Text style={styles.charCount}>{bio.length}/200</Text>
+
+        <Text style={styles.label}>Services You Offer (optional)</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={services}
+          onChangeText={setServices}
+          placeholder="e.g. Kundli reading, Muhurat timing, Vastu consultation, Compatibility matching..."
+          placeholderTextColor="#ABABAB"
+          multiline
+          maxLength={300}
+          numberOfLines={3}
+        />
+
+        <Text style={styles.label}>Website / Instagram (optional)</Text>
+        <TextInput
+          style={styles.input}
+          value={website}
+          onChangeText={setWebsite}
+          placeholder="https://instagram.com/yourhandle"
+          placeholderTextColor="#ABABAB"
+          autoCapitalize="none"
+          keyboardType="url"
+        />
+
+        <TouchableOpacity style={styles.saveBtn} onPress={saveProfile}>
+          <Text style={styles.saveBtnTxt}>Save Profile</Text>
+        </TouchableOpacity>
       </ScrollView>
 
-      {/* ✅ MODALS OUTSIDE ScrollView */}
       {showDatePicker && (
-  <DateTimePicker
-    value={dob ? new Date(dob) : new Date()}
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowDatePicker(false);
-      if (selectedDate) {
-        setDob(selectedDate.toISOString().split('T')[0]);
-      }
-    }}
-  />
-)}
-
-{showTimePicker && (
-  <DateTimePicker
-    value={tob ? new Date(`2000-01-01T${tob}`) : new Date()}
-    mode="time"
-    display="spinner"
-    is24Hour={true}
-    onChange={(event, selectedTime) => {
-      setShowTimePicker(false);
-      if (selectedTime) {
-        const hh = selectedTime.getHours().toString().padStart(2, '0');
-        const mm = selectedTime.getMinutes().toString().padStart(2, '0');
-        setTob(`${hh}:${mm}`);
-      }
-    }}
-  />
-)}
-
-    </>
-  </KeyboardAvoidingView>
+        <DateTimePicker
+          value={dob ? new Date(dob) : new Date()}
+          mode="date"
+          display="default"
+          onChange={(e, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) setDob(selectedDate.toISOString().split('T')[0]);
+          }}
+        />
+      )}
+      {showTimePicker && (
+        <DateTimePicker
+          value={tob ? new Date(`2000-01-01T${tob}`) : new Date()}
+          mode="time"
+          display="spinner"
+          is24Hour={true}
+          onChange={(e, selectedTime) => handleTimeConfirm(selectedTime)}
+        />
+      )}
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -439,18 +336,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   editPhotoText: { marginTop: 6, color: '#007aff' },
-  label: { fontWeight: '600', marginTop: 16, marginBottom: 4 },
+  label: { fontWeight: '600', marginTop: 16, marginBottom: 4, color: '#333', fontSize: 14 },
   input: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 10,
-    padding: 10, fontSize: 16
+    borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 10,
+    padding: 12, fontSize: 15, color: '#1A1A2E', backgroundColor: '#FAFAFA',
   },
-  suggestions: {
+  textArea: { minHeight: 90, textAlignVertical: 'top' },
+  charCount: { fontSize: 11, color: '#ABABAB', textAlign: 'right', marginTop: 2 },
+  sectionHeader: { marginTop: 28, marginBottom: 8, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E' },
+  sectionSub: { fontSize: 12, color: '#8E8E8E', marginTop: 2 },
+  saveBtn: { backgroundColor: '#7C3AED', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 28, marginBottom: 10 },
+  saveBtnTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  suggestionBox: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    maxHeight: 150,
+    maxHeight: 180,
     marginTop: 4,
+    marginBottom: 4,
   },
   suggestionItem: {
     padding: 12,
@@ -460,7 +365,8 @@ const styles = StyleSheet.create({
   coordinates: {
     fontSize: 13,
     color: 'green',
-    marginTop: 6,
+    marginTop: 4,
+    marginBottom: 4,
     textAlign: 'center',
   },
 });

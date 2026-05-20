@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform, StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as Notifications from 'expo-notifications';
+import { BASE_URL } from './config/constants';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { auth } from './config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { UserChartProvider } from './screens/UserChartContext';
 
 import ResetScreen from './screens/ResetScreen'; // adjust path as needed
+import PhoneLoginScreen from './screens/PhoneLoginScreen';
+import OtpVerifyScreen from './screens/OtpVerifyScreen';
+
+import WalletScreen from './screens/WalletScreen';
+import TransactionHistoryScreen from './screens/TransactionHistoryScreen';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+
 
 // 📱 Main App Screens
 import HomeScreen from './screens/HomeScreen';
@@ -30,6 +43,9 @@ import HourlyRiskMeterScreen from './screens/HourlyRiskMeterScreen';
 import SocialWall from './screens/Socialwall';
 import EditProfileScreen from './screens/EditProfileScreen';
 import DharmaRechargeScreen from './screens/DharmaRechargeScreen';
+import DharmaPaymentWebView from './screens/DharmaPaymentWebView';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
 
 
 
@@ -43,31 +59,125 @@ import Step6PhotoScreen from './screens/signup/Step6PhotoScreen';
 import Step7ConfirmScreen from './screens/signup/Step7ConfirmScreen';
 
 
+import SettingsScreen from './screens/SettingsScreen';
+import VastuScannerScreen from './screens/VastuScannerScreen';
+import CosmicHomeScreen from './screens/CosmicHomeScreen';
+import AiJyotishScreen from './screens/AiJyotishScreen';
+import MuhuratScreen from './screens/MuhuratScreen';
+import RelationshipCosmosScreen from './screens/RelationshipCosmosScreen';
+import HealthRhythmScreen from './screens/HealthRhythmScreen';
+import NakshatraCommunityScreen from './screens/NakshatraCommunityScreen';
+import DiscoverScreen from './screens/DiscoverScreen';
+import SocialFeedScreen from './screens/social/SocialFeedScreen';
+import JyotishProfileUnlockScreen from './screens/social/JyotishProfileUnlockScreen';
+import CreatePostScreen from './screens/social/CreatePostScreen';
+import UserSearchScreen from './screens/social/UserSearchScreen';
+import UserProfileScreen from './screens/social/UserProfileScreen';
+import FollowListScreen from './screens/social/FollowListScreen';
+import PostDetailScreen from './screens/social/PostDetailScreen';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Text as RNText } from 'react-native';
+import { colors } from './config/theme';
+
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+function MainStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {/* New 8-pillar screens */}
+      <Stack.Screen name="CosmicHome"          component={CosmicHomeScreen} />
+      <Stack.Screen name="AiJyotish"           component={AiJyotishScreen} />
+      <Stack.Screen name="MuhuratScreen"       component={MuhuratScreen} />
+      <Stack.Screen name="RelationshipCosmos"  component={RelationshipCosmosScreen} />
+      <Stack.Screen name="HealthRhythm"        component={HealthRhythmScreen} />
+      <Stack.Screen name="NakshatraCommunity"  component={NakshatraCommunityScreen} />
+      <Stack.Screen name="VastuScanner"        component={VastuScannerScreen} />
+
+      {/* Legacy screens — all preserved */}
+      <Stack.Screen name="HomeMain"            component={HomeScreen} options={{ headerShown: true, title: 'Home' }} />
+      <Stack.Screen name="AstroAlert"          component={AstroAlertScreen} />
+      <Stack.Screen name="AstroNav"            component={AstroNavScreen} />
+      <Stack.Screen name="AstroFitness"        component={AstroFitnessScreen} />
+      <Stack.Screen name="Compatibility"       component={CompatibilityScreen} />
+      <Stack.Screen name="AstroConnect"        component={AstroConnectScreen} />
+      <Stack.Screen name="AstroShop"           component={AstroShopScreen} />
+      <Stack.Screen name="AstroEssence"        component={AstroEssenceScreen} />
+      <Stack.Screen name="AstroLove"           component={AstroLoveScreen} />
+      <Stack.Screen name="AstroCareer"         component={AstroCareerScreen} />
+      <Stack.Screen name="AstroCircle"         component={AstroCircleScreen} />
+      <Stack.Screen name="AstroBond"           component={AstroBondScreen} />
+      <Stack.Screen name="AstroMoney"          component={AstroMoneyScreen} />
+      <Stack.Screen name="AstroSocial"         component={AstroSocial} />
+      <Stack.Screen name="CelestialPulse"      component={CelestialPulseScreen} />
+      <Stack.Screen name="HourlyRisk"          component={HourlyRiskMeterScreen} />
+      <Stack.Screen name="Reset"               component={ResetScreen} />
+      <Stack.Screen name="EditProfile"         component={EditProfileScreen} />
+      <Stack.Screen name="DharmaRecharge"      component={DharmaRechargeScreen} />
+      <Stack.Screen name="WalletScreen"        component={WalletScreen} />
+      <Stack.Screen name="TransactionHistory"  component={TransactionHistoryScreen} />
+      <Stack.Screen name="DharmaPaymentWebView"component={DharmaPaymentWebView} />
+      <Stack.Screen name="RhythmBand"          component={ResetScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// New 5-tab navigator
+function NewMainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor:   '#F4B942',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
+        tabBarStyle: {
+          backgroundColor: '#0D0829',
+          borderTopWidth:  1,
+          borderTopColor:  'rgba(244,185,66,0.2)',
+          height:          68,
+          paddingBottom:   10,
+          paddingTop:      8,
+        },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 2 },
+        tabBarIcon: ({ color, focused }) => {
+          const icons = {
+            Today:       '☀',
+            Social:      '◎',
+            'Ask Astro': '✦',
+            Discover:    '⊕',
+            More:        '≡',
+          };
+          return (
+            <RNText style={{ fontSize: focused ? 26 : 22, color, lineHeight: 28, includeFontPadding: false }}>
+              {icons[route.name]}
+            </RNText>
+          );
+        },
+      })}
+    >
+      <Tab.Screen name="Today"     component={CosmicHomeScreen} />
+      <Tab.Screen name="Social"    component={SocialFeedScreen} />
+      <Tab.Screen name="Ask Astro" component={AiJyotishScreen} />
+      <Tab.Screen name="Discover"  component={DiscoverScreen} />
+      <Tab.Screen name="More"      component={SettingsScreen} />
+    </Tab.Navigator>
+  );
+}
+
+// Legacy stack (kept as fallback)
 function HomeStackScreen() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="HomeMain" component={HomeScreen} options={{ title: "Home" }} />
-      <Stack.Screen name="AstroAlert" component={AstroAlertScreen} />
-      <Stack.Screen name="AstroNav" component={AstroNavScreen} />
-      <Stack.Screen name="AstroFitness" component={AstroFitnessScreen} />
+      <Stack.Screen name="HomeMain"      component={HomeScreen}          options={{ title: 'Home' }} />
+      <Stack.Screen name="AstroAlert"    component={AstroAlertScreen} />
       <Stack.Screen name="Compatibility" component={CompatibilityScreen} />
-      <Stack.Screen name="AstroConnect" component={AstroConnectScreen} />
-      <Stack.Screen name="AstroShop" component={AstroShopScreen} />
-      <Stack.Screen name="AstroEssence" component={AstroEssenceScreen} />
-      <Stack.Screen name="AstroLove" component={AstroLoveScreen} />
-      <Stack.Screen name="AstroCareer" component={AstroCareerScreen} />
-      <Stack.Screen name="AstroCircle" component={AstroCircleScreen} />
-      <Stack.Screen name="AstroBond" component={AstroBondScreen} />
-      <Stack.Screen name="AstroMoney" component={AstroMoneyScreen} />
-      <Stack.Screen name="AstroSocial" component={AstroSocial} />
-      <Stack.Screen name="CelestialPulse" component={CelestialPulseScreen} />
-      <Stack.Screen name="HourlyRisk" component={HourlyRiskMeterScreen} />
-      <Stack.Screen name="Reset" component={ResetScreen} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-      <Stack.Screen name="DharmaRecharge" component={DharmaRechargeScreen} />
+      <Stack.Screen name="AstroCareer"   component={AstroCareerScreen} />
+      <Stack.Screen name="AstroMoney"    component={AstroMoneyScreen} />
+      <Stack.Screen name="CelestialPulse"component={CelestialPulseScreen}/>
+      <Stack.Screen name="HourlyRisk"    component={HourlyRiskMeterScreen}/>
+      <Stack.Screen name="EditProfile"   component={EditProfileScreen} />
+      <Stack.Screen name="VastuScanner"  component={VastuScannerScreen}  options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
@@ -75,6 +185,8 @@ function HomeStackScreen() {
 function SignupStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="PhoneLoginScreen" component={PhoneLoginScreen} />
+      <Stack.Screen name="OtpVerifyScreen" component={OtpVerifyScreen} />
       <Stack.Screen name="Step1Name" component={Step1NameScreen} />
       <Stack.Screen name="Step2Dob" component={Step2DobScreen} />
       <Stack.Screen name="Step3Tob" component={Step3TobScreen} />
@@ -91,66 +203,144 @@ export default function App() {
   const [hasProfile, setHasProfile] = useState(false);
 
 
-  // to be uncommented when in production - Rahul
-  // useEffect(() => {
-  //   const checkUserProfile = async () => {
-  //     const data = await AsyncStorage.getItem('userProfile');
-  //     setHasProfile(!!data);
-  //     setIsLoading(false);
-  //   };
-  //   checkUserProfile();
-  // }, []);
+  
+  // Register push notifications
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status: existing } = await Notifications.getPermissionsAsync();
+        let finalStatus = existing;
+        if (existing !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        if (finalStatus !== 'granted') return;
+        const tokenData = await Notifications.getExpoPushTokenAsync({
+          projectId: '41f1b53f-aacc-41ec-9e01-bb9d76936b61', // EAS project ID from app.json
+        });
+        const expoPushToken = tokenData.data;
+        // Save to backend once user is logged in
+        const saveToken = async () => {
+          const user = getAuth().currentUser;
+          if (!user || !expoPushToken) return;
+          const idToken = await user.getIdToken();
+          await fetch(`${BASE_URL}/api/save-push-token`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ expoPushToken }),
+          }).catch(() => {});
+        };
+        // Try immediately + retry after 3s in case user just logged in
+        saveToken();
+        setTimeout(saveToken, 3000);
 
+        if (Platform.OS === 'android') {
+          Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+          });
+        }
+      } catch (e) {
+        console.log('[Push] setup error:', e);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
-    const checkUserProfile = async () => {
+    // Wait for Firebase auth to settle, then decide which screen to show.
+    // If AsyncStorage has a profile but Firebase has no valid session (e.g. after
+    // reinstalling or Firebase project change), clear the stale profile and force
+    // the user through OTP login again.
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       const data = await AsyncStorage.getItem('userProfile');
-      setHasProfile(!!data);
+
+      if (firebaseUser && data) {
+        // Fully signed in — show main app
+        setHasProfile(true);
+      } else if (data && !firebaseUser) {
+        // Stale profile in storage but no Firebase session — clear and re-login
+        await AsyncStorage.removeItem('userProfile');
+        setHasProfile(false);
+      } else {
+        // No profile or no firebase user — show signup/login
+        setHasProfile(false);
+      }
       setIsLoading(false);
+    });
+
+    // Still poll every 2s so the screen switches right after OTP login completes
+    const interval = setInterval(async () => {
+      const data = await AsyncStorage.getItem('userProfile');
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser && data) setHasProfile(true);
+    }, 2000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
     };
-  
-    checkUserProfile();
-  
-    // 👀 Optional: Poll every 1 second to detect profile change after confirmation
-    const interval = setInterval(checkUserProfile, 1000);
-    return () => clearInterval(interval);
   }, []);
+  
   
   
 
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#8844ee" />
-      </View>
+      <LinearGradient colors={['#080416', '#1E0A4F', '#2D0F7A']} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <RNText style={{ fontSize: 48, marginBottom: 16 }}>🪐</RNText>
+        <RNText style={{ color: '#F4B942', fontSize: 24, fontWeight: '800' }}>AstroVue</RNText>
+        <ActivityIndicator size="large" color="#F4B942" style={{ marginTop: 24 }} />
+      </LinearGradient>
     );
   }
 
   return (
+    <SafeAreaProvider>
     <UserChartProvider>
+      <StatusBar translucent={false} backgroundColor="#000000" barStyle="light-content" />
       <NavigationContainer>
         {hasProfile ? (
-       <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
-            {() => (
-              <Tab.Navigator screenOptions={{ headerShown: false }}>
-                <Tab.Screen name="Home" component={HomeStackScreen} />
-                <Tab.Screen name="Kundli" component={KundliScreen} />
-                <Tab.Screen name="Social" component={SocialWall} />
-                <Tab.Screen name="Connect" component={AstroConnectScreen} />
-              </Tab.Navigator>
-            )}
-          </Stack.Screen>
-        
-          {/* 🔓 Make AstroBond globally available */}
-          <Stack.Screen name="AstroBond" component={AstroBondScreen} />
-        </Stack.Navigator>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MainTabs" component={NewMainTabs} />
+            {/* All screens accessible from anywhere */}
+            <Stack.Screen name="AiJyotish"            component={AiJyotishScreen} />
+            <Stack.Screen name="SocialFeed"           component={SocialFeedScreen} />
+            <Stack.Screen name="SocialProfile"        component={JyotishProfileUnlockScreen} />
+            <Stack.Screen name="JyotishProfileUnlock" component={JyotishProfileUnlockScreen} />
+            <Stack.Screen name="CreatePost"           component={CreatePostScreen} />
+            <Stack.Screen name="UserSearch"           component={UserSearchScreen} />
+            <Stack.Screen name="UserProfile"          component={UserProfileScreen} />
+            <Stack.Screen name="FollowList"           component={FollowListScreen} />
+            <Stack.Screen name="PostDetail"           component={PostDetailScreen} />
+            <Stack.Screen name="MuhuratScreen"        component={MuhuratScreen} />
+            <Stack.Screen name="RelationshipCosmos"  component={RelationshipCosmosScreen} />
+            <Stack.Screen name="HealthRhythm"        component={HealthRhythmScreen} />
+            <Stack.Screen name="NakshatraCommunity"  component={NakshatraCommunityScreen} />
+            <Stack.Screen name="VastuScanner"        component={VastuScannerScreen} />
+            <Stack.Screen name="AstroBond"           component={AstroBondScreen} />
+            <Stack.Screen name="EditProfile"         component={EditProfileScreen} />
+            <Stack.Screen name="DharmaRecharge"      component={DharmaRechargeScreen} />
+            <Stack.Screen name="WalletScreen"        component={WalletScreen} />
+            <Stack.Screen name="TransactionHistory"  component={TransactionHistoryScreen} />
+            <Stack.Screen name="DharmaPaymentWebView"component={DharmaPaymentWebView} />
+            <Stack.Screen name="CelestialPulse"      component={CelestialPulseScreen} />
+            <Stack.Screen name="HourlyRisk"          component={HourlyRiskMeterScreen} />
+            <Stack.Screen name="AstroCareer"         component={AstroCareerScreen} />
+            <Stack.Screen name="AstroMoney"          component={AstroMoneyScreen} />
+            <Stack.Screen name="AstroAlert"          component={AstroAlertScreen} />
+            <Stack.Screen name="Compatibility"       component={CompatibilityScreen} />
+            <Stack.Screen name="AstroLove"           component={AstroLoveScreen} />
+            <Stack.Screen name="Reset"               component={ResetScreen} />
+            <Stack.Screen name="Kundli"              component={KundliScreen} />
+            <Stack.Screen name="HomeMain"            component={HomeScreen} options={{ headerShown: true }} />
+          </Stack.Navigator>
         
         ) : (
           <SignupStackScreen />
         )}
       </NavigationContainer>
     </UserChartProvider>
+    </SafeAreaProvider>
   );
 }

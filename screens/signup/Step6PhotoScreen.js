@@ -15,6 +15,18 @@ import { KeyboardAvoidingView } from 'react-native';
 export default function Step6ProfilePhotoScreen({ navigation, route }) {
   const [photo, setPhoto] = useState(null);
 
+  const {
+    name,
+    dob,
+    tob,
+    pob,
+    email,
+    phoneNumber,
+    countryCode
+  } = route.params;
+
+  
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -40,9 +52,14 @@ export default function Step6ProfilePhotoScreen({ navigation, route }) {
 
   const handleNext = () => {
     navigation.navigate('Step7Confirm', {
-      ...route.params,
-      photo, // optional, can be null
-     
+      name,
+      dob,
+      tob,
+      pob,
+      email,
+      photo,
+      phoneNumber,
+      countryCode,
     });
   };
 

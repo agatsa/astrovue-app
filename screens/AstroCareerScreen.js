@@ -2,8 +2,9 @@ import { BASE_URL } from "../config/constants";
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TextInput,
-  TouchableOpacity, ActivityIndicator
+  TouchableOpacity, ActivityIndicator, StatusBar
 } from 'react-native';
+import ScreenHeader from '../components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from '../config/firebase';
 import AskAIBox from '../components/AskAIBox';
@@ -17,7 +18,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 // const BASE_URL = 'http://192.168.1.13:8080';
 
-export default function AstroCareer() {
+export default function AstroCareer({ navigation }) {
   const [data, setData] = useState(null);
   const [question, setQuestion] = useState('');
   const [aiResponse, setAiResponse] = useState('');
@@ -118,6 +119,8 @@ export default function AstroCareer() {
           setData({ error: 'Incomplete birth chart information.' });
           return;
         }
+        console.log("chart:", chart);
+        
 
 
         const prompt = `
@@ -236,6 +239,8 @@ export default function AstroCareer() {
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <ScreenHeader title="Astro Career" navigation={navigation} />
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -325,8 +330,8 @@ export default function AstroCareer() {
         />
       </KeyboardAwareScrollView>
     </KeyboardAvoidingView>
+    </View>
   );
-  
 }
 
 const styles = StyleSheet.create({

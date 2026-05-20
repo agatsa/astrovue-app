@@ -13,6 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 export default function Step3TobScreen({ navigation, route }) {
   const [tob, setTob] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
+  const { name, dob, phoneNumber, countryCode } = route.params || {};
+
 
   const handleBack = () => navigation.goBack();
 

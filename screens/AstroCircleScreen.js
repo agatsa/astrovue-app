@@ -1,3 +1,4 @@
+import { BASE_URL } from "../config/constants";
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
@@ -87,136 +88,58 @@ export default function AstroCircleScreen({ navigation }) {
     }
   };
 
-const fetchAcceptedConnections = async () => {
-  const uid = auth.currentUser.uid;
-
-  const q = query(
-    collection(db, "astro_circle_requests"),
-    where("status", "==", "accepted")
-  );
-
-  const snapshot = await getDocs(q);
-  const dedupedMap = new Map();
-
-  for (const docSnap of snapshot.docs) {
-    const data = docSnap.data();
-
-    // Include only if current user is sender or receiver
-    if (data.sender_uid === uid || data.receiver_uid === uid) {
-      const otherUid = data.sender_uid === uid ? data.receiver_uid : data.sender_uid;
-
-      if (!dedupedMap.has(otherUid)) {
+  const fetchAcceptedConnections = async () => {
+    const uid = auth.currentUser.uid;
+  
+    const q = query(
+      collection(db, "astro_circle_requests"),
+      where("status", "==", "accepted")
+    );
+  
+    const snapshot = await getDocs(q);
+    const finalList = [];
+  
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+  
+      if (data.sender_uid === uid || data.receiver_uid === uid) {
+        const otherUid = data.sender_uid === uid ? data.receiver_uid : data.sender_uid;
+  
         const userRef = doc(db, "users", otherUid);
         const userSnap = await getDoc(userRef);
         const userData = userSnap.exists() ? userSnap.data() : {};
-
-        dedupedMap.set(otherUid, {
+  
+        const cleanedTob = userData?.tob?.slice?.(11, 16) || '';
+        const cleanedDob = userData?.dob?.slice?.(0, 10) || '';
+  
+        finalList.push({
           uid: otherUid,
           name: userData.name || "Unknown",
-          image: userData.photo ? { uri: userData.photo } : require("../assets/family3.png"),
+          photo: userData.photo || null,
           moon: userData.moon_sign || "🌙",
           energy: userData.energy || "✨",
           relation: userData.relation || "",
+          dob: cleanedDob,
+          tob: cleanedTob,
+          pob: userData.pob || "Unknown",
+          image: userData.photo && userData.photo.startsWith('http')
+            ? { uri: userData.photo }
+            : require("../assets/family3.png"),
         });
       }
     }
-  }
-
-  // setAcceptedPeople(Array.from(dedupedMap.values()));
-
- const finalList = Array.from(dedupedMap.values()).map(p => ({
-  ...p,
-  image: p.photo ? { uri: p.photo } : require("../assets/family3.png"),
-}));
-
-// const finalList = [];
-
-// const finalList = [
-//   {
-//     uid: 'test123',
-//     name: 'Test User',
-//     photo: null,
-//     moon: 'Taurus',
-//     energy: 'Balanced',
-//     relation: 'Crush',
-//     dob: '1995-08-15',       // ✅ dummy DOB (ISO string or YYYY-MM-DD)
-//     tob: '14:30',            // ✅ dummy TOB (HH:mm format)
-//     pob: 'Delhi, India',     // ✅ dummy POB (city, country)
-//     image: require('../assets/family3.png')
-//   },
-//   {
-//     uid: 'demo456',
-//     name: 'Priya Sharma',
-//     photo: null,
-//     moon: 'Cancer',
-//     energy: 'High',
-//     relation: 'Partner',
-//     dob: '1992-04-20',
-//     tob: '09:15',
-//     pob: 'Mumbai, India',
-//     image: require('../assets/avatar2.png')
-//   }
-// ];
-
-
-for (const docSnap of snapshot.docs) {
-  const data = docSnap.data();
-
-  if (data.sender_uid === uid || data.receiver_uid === uid) {
-    const otherUid = data.sender_uid === uid ? data.receiver_uid : data.sender_uid;
-
-    if (!dedupedMap.has(otherUid)) {
-      const userRef = doc(db, "users", otherUid);
-      const userSnap = await getDoc(userRef);
-      const userData = userSnap.exists() ? userSnap.data() : {};
-
-      const cleanedTob = userData?.tob?.slice?.(11, 16) || '';
-      const cleanedDob = userData?.dob?.slice?.(0, 10) || '';
-
-      finalList.push({
-        uid: otherUid,
-        name: userData.name || "Unknown",
-        photo: userData.photo || null,
-        moon: userData.moon_sign || "🌙",
-        energy: userData.energy || "✨",
-        relation: userData.relation || "",
-        dob: cleanedDob,
-        tob: cleanedTob,
-        pob: userData.pob || "Unknown",
-        image: userData.photo ? { uri: userData.photo } : require("../assets/family3.png"),
-      });
+  
+    // ✅ Save to local + state
+    await AsyncStorage.setItem('@astro_circle', JSON.stringify(finalList));
+    setAcceptedPeople(finalList);
+  
+    if (finalList.length > 0) {
+      console.log('✅ Saved @astro_circle to AsyncStorage');
+    } else {
+      console.warn('⚠️ finalList was empty — nothing saved to AsyncStorage');
     }
-  }
-}
-
-
-// const finalList = [
-//   {
-//     uid: 'test123',
-//     name: 'Test User',
-//     photo: null,
-//     moon: 'Taurus',
-//     energy: 'Balanced',
-//     relation: 'Crush',
-//     image: require('../assets/family3.png')
-//   }
-// ];
-
-await AsyncStorage.setItem('@astro_circle', JSON.stringify(finalList));
-
-
-setAcceptedPeople(finalList);
-
-if (finalList.length > 0) {
-  await AsyncStorage.setItem('@astro_circle', JSON.stringify(finalList));
-  console.log('✅ Saved @astro_circle to AsyncStorage');
-} else {
-  console.warn('⚠️ finalList was empty — nothing saved to AsyncStorage');
-}
-
-
-
-};
+  };
+  
 
 
   const removeConnection = async (otherUid) => {
@@ -385,7 +308,7 @@ if (finalList.length > 0) {
    <Text style={{ color: '#b00020', fontSize: 16 }}>🗑️</Text>
  </TouchableOpacity>
 
- <Image source={{ uri: person.photo }} style={styles.instaAvatar} />
+ <Image source={person.image} style={styles.instaAvatar} />
  <Text style={styles.instaName}>{person.name}</Text>
 
  {person.moon || person.energy ? (
@@ -543,10 +466,11 @@ const styles = StyleSheet.create({
   },
   
   instaAvatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginBottom: 10
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    resizeMode: 'cover', // ← optional, for good cropping
+    backgroundColor: '#eee', // ← optional fallback
   },
   
   instaName: {

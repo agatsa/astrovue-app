@@ -14,12 +14,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-export default function Step1NameScreen({ navigation }) {
+export default function Step1NameScreen({ navigation, route }) {
   const [name, setName] = useState('');
+  const { phoneNumber, countryCode } = route.params || {};
+
+
+
+
 
   const handleNext = () => {
     if (name.trim()) {
-      navigation.navigate('Step2Dob', { name });
+      navigation.navigate('Step2Dob', {
+        ...route.params,
+        name,
+      });
     } else {
       alert('Please enter your name');
     }

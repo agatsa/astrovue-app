@@ -1,167 +1,158 @@
-// import { BASE_URL } from "../config/constants";
 import React, { useEffect, useState } from 'react';
-import { View, ImageBackground, Text, StyleSheet, Dimensions, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, ActivityIndicator, ScrollView, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { BASE_URL } from "../config/constants";
+import { BASE_URL } from '../../config/constants'; // Adjust the import path as needed
+const screenWidth = Dimensions.get('window').width;
+const imageSize = screenWidth - 50;
 
-const { width } = Dimensions.get('window');
-const chartSize = width * 0.95;
-
-// Static mock planet data
-const planetData = {
-  1: { sign: 'Aquarius', planets: ['Moon'] },
-  2: { sign: 'Pisces', planets: ['Venus'] },
-  3: { sign: 'Aries', planets: [] },
-  4: { sign: 'Taurus', planets: [] },
-  5: { sign: 'Gemini', planets: [] },
-  6: { sign: 'Cancer', planets: [] },
-  7: { sign: 'Leo', planets: ['true Node'] },
-  8: { sign: 'Virgo', planets: ['Jupiter', 'Mars', 'Saturn'] },
-  9: { sign: 'Libra', planets: [] },
-  10: { sign: 'Scorpio', planets: [] },
-  11: { sign: 'Sagittarius', planets: [] },
-  12: { sign: 'Capricorn', planets: ['Asc', 'Mercury', 'Sun'] },
+const signNames = {
+  1: 'Aries', 2: 'Taurus', 3: 'Gemini', 4: 'Cancer',
+  5: 'Leo', 6: 'Virgo', 7: 'Libra', 8: 'Scorpio',
+  9: 'Sagittarius', 10: 'Capricorn', 11: 'Aquarius', 12: 'Pisces',
 };
 
-const positions = {
-  1: { top: '62%', left: '45%' },
-  2: { top: '74%', left: '60%' },
-  3: { top: '83%', left: '72%' },
-  4: { top: '60%', left: '75%' },
-  5: { top: '45%', left: '60%' },
-  6: { top: '30%', left: '50%' },
-  7: { top: '18%', left: '46%' },
-  8: { top: '30%', left: '30%' },
-  9: { top: '45%', left: '18%' },
-  10: { top: '60%', left: '20%' },
-  11: { top: '74%', left: '20%' },
-  12: { top: '83%', left: '46%' },
-};
-
-export default function BirthChartScreen() {
+const BirthChart = () => {
+  const [kundaliBase64, setKundaliBase64] = useState('');
+  const [planetRawData, setPlanetRawData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchChartData = async () => {
+    try {
+      const profileStr = await AsyncStorage.getItem('userProfile');
+      // Retrieve and confirm saved value (optional)
+      const userlatlongStr = await AsyncStorage.getItem('@latlong');
+      const userlatlong = JSON.parse(userlatlongStr || '{}');
+      console.log('📦 Retrieved from AsyncStorage IN BIRTH CHART:', userlatlong);
+
+      const latitude = userlatlong.lat ||0; // Default to 0 if not set
+      const longitude = userlatlong.lon || 0; // Default to 0 if not
+      
+
+
+
+
+      const profile = JSON.parse(profileStr || '{}');
+      const dob = new Date(profile.dob);
+      const tob = profile.tob || ''; // e.g., "23:45"
+      const birth_time = tob.split(':').map(Number); // converts ["23", "45"] → [23, 45]
+      console.log("TOB:", tob);
+      
+      const birth_date = [dob.getFullYear(), dob.getMonth() + 1, dob.getDate()];
+      const tz_offset = 5.5;
+      console.log("Profile data:", profile);
+      
+
+      const payload = {
+        birth_date,
+        birth_time,
+        latitude,
+        longitude,
+        tz_offset,
+        user_name: profile.name || 'User',
+      };
+      console.log("payload:", payload);
+      
+
+      const res = await fetch(`${BASE_URL}/calculate_chart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error('Failed to fetch chart');
+
+      setKundaliBase64(data.kundali_image_base64);
+
+      const rawDataArray = [];
+      const chart = data.chart;
+
+      for (let key in chart) {
+        const { current_sign, normDegree, name } = chart[key];
+        if (name === 'Ascendant') continue;
+        rawDataArray.push({ name, current_sign, normDegree });
+      }
+
+      setPlanetRawData(rawDataArray);
+    } catch (err) {
+      console.error('❌ Error fetching chart data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setTimeout(() => setLoading(false), 400); // simulate loading
+    fetchChartData();
   }, []);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <View style={styles.loadingCard}>
+          <ActivityIndicator size="large" color="#8B5A2B" />
+          <Text style={styles.loadingText}>Loading Kundli Chart...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>\u2728 Your Birth Chart</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#d9822b" style={{ marginTop: 40 }} />
-      ) : (
-        <ImageBackground
-          source={require('../../assets/birth-chart-template.jpg')}
-          style={styles.chart}
-          resizeMode="contain"
-        >
-          {Object.entries(planetData).map(([house, { sign, planets }]) => {
-            const pos = positions[house];
-            return (
-              <View key={house} style={[styles.planetBox, { top: pos.top, left: pos.left }]}>
-                {sign && <Text style={styles.signText}>{sign}</Text>}
-                {planets.map((p, i) => (
-                  <Text key={i} style={styles.planetText}>{p}</Text>
-                ))}
-              </View>
-            );
-          })}
-        </ImageBackground>
-      )}
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>\u2609 Planetary Positions</Text>
-        {Object.entries(planetData).map(([house, { sign, planets }]) =>
-          planets.map((planet, i) => (
-            <Text key={`${house}-${i}`} style={styles.sectionText}>
-              {planet} is in {sign} (House {house})
-            </Text>
-          ))
+      {/* Kundali Image */}
+      <View style={styles.chartCard}>
+        {kundaliBase64 ? (
+          <Image
+            source={{ uri: `data:image/png;base64,${kundaliBase64}` }}
+            style={{ width: imageSize, height: imageSize, borderRadius: 12 }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Text>❌ Failed to load Kundli image</Text>
         )}
       </View>
 
+      {/* Planetary Table */}
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>\u2302 House-wise Summary</Text>
-        {Object.entries(planetData).map(([house, { planets }]) => (
-          <Text key={house} style={styles.sectionText}>
-            House {house}: {planets.length ? planets.join(', ') : 'Empty'}
-          </Text>
-        ))}
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>\u26A1 Yogas & Doshas</Text>
-        <Text style={styles.sectionText}>✅ Budh Aditya Yoga (Sun + Mercury)</Text>
-        <Text style={styles.sectionText}>⚠️ Mangal Dosha: Not detected</Text>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>\uD83D\uDCC5 Interpretation</Text>
-        <Text style={styles.sectionText}>
-          Moon in Aquarius gives emotional intelligence and detachment. Strong Virgo presence with Jupiter and Mars indicates analytical skills and leadership in professional life. Sun and Mercury in Capricorn bring career focus and clear communication.
-        </Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardIcon}>📊</Text>
+          <Text style={styles.cardTitle}>Planetary Data</Text>
+        </View>
+        <View style={styles.cardContent}>
+          {planetRawData.map((planet, index) => (
+            <View key={index} style={styles.tableRow}>
+              <Text style={styles.tableCell}>{planet.name}</Text>
+              <Text style={styles.tableCell}>{signNames[planet.current_sign]}</Text>
+              <Text style={styles.tableCell}>{planet.normDegree.toFixed(2)}°</Text>
+            </View>
+          ))}
+        </View>
       </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  container: { padding: 16, backgroundColor: '#F7F3E9', minHeight: '100%' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingCard: { backgroundColor: '#FFF', padding: 30, borderRadius: 16, alignItems: 'center' },
+  loadingText: { marginTop: 16, fontSize: 16, color: '#8B5A2B', fontWeight: '500' },
+  chartCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 20, marginBottom: 20, alignItems: 'center' },
+  card: { backgroundColor: '#FFF', borderRadius: 16, marginBottom: 16, overflow: 'hidden' },
+  cardHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
-    backgroundColor: '#fefbf6',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FDF6E3',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0E6D2',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
-  chart: {
-    width: chartSize,
-    height: chartSize,
-    position: 'relative',
-    marginBottom: 20,
-  },
-  planetBox: {
-    position: 'absolute',
-    alignItems: 'center',
-    transform: [{ translateX: -25 }, { translateY: -25 }],
-  },
-  signText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#000',
-    backgroundColor: '#fff',
-    paddingHorizontal: 4,
-    borderRadius: 4,
-    marginBottom: 2,
-  },
-  planetText: {
-    fontSize: 10,
-    color: '#000',
-    textAlign: 'center',
-  },
-  card: {
-    width: '92%',
-    backgroundColor: '#fff8e7',
-    borderRadius: 14,
-    padding: 15,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#d9822b'
-  },
-  sectionText: {
-    fontSize: 13,
-    marginBottom: 4,
-    color: '#444'
-  },
+  cardIcon: { fontSize: 20, marginRight: 12 },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#8B5A2B', flex: 1 },
+  cardContent: { padding: 20 },
+  tableRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  tableCell: { fontSize: 14, color: '#5D4E37', flex: 1, textAlign: 'center' },
 });
+
+export default BirthChart;

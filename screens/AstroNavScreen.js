@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvo
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Magnetometer } from 'expo-sensors';
-import { API_TOKEN } from '../config/apiConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../config/firebase';
 
 export default function AstroNavScreen() {
   const [location, setLocation] = useState(null);
@@ -80,16 +81,23 @@ export default function AstroNavScreen() {
 
   const fetchAstroContext = async ({ latitude, longitude }) => {
     try {
-      const response = await fetch("https://kundli-api-812108926556.asia-south1.run.app/api/location-energy", {
+      const profileStr = await AsyncStorage.getItem('userProfile');
+      const profile = JSON.parse(profileStr || '{}');
+      const user = auth.currentUser;
+      const idToken = user ? await user.getIdToken() : null;
+      const response = await fetch(`${BASE_URL}/api/location-energy`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImJhYTY0ZWZjMTNlZjIzNmJlOTIxZjkyMmUzYTY3Y2M5OTQxNWRiOWIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIzMjU1NTk0MDU1OS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImF1ZCI6IjMyNTU1OTQwNTU5LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTE0OTczMTk0NDMxODYzMjQyNjQ0IiwiaGQiOiJrdW5kbGlzdXRyYS5jb20iLCJlbWFpbCI6InRlY2hAa3VuZGxpc3V0cmEuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzYUNnRm9PZEJWQWhENGVxMllMM2p3IiwiaWF0IjoxNzQ4MzQ0NTM3LCJleHAiOjE3NDgzNDgxMzd9.kxbZVnUdO3smU8v3tRabcSREd9QohNTFGi1SojtHJgtogLw8yaRvv3KEjDSq1ezDfLxVDclGW_8f1mSj2W6557PhIB6Z6VnEK_y_GF6p6tANbLPOFdeb63xzR2pX6lb1XcBjM__qim2cs87P1WjEhN8YQdw8APJ0f234IxeZZmBQcFNYtahKqtUTPtatdi8WXsfGcrFj0cLJxOZ-83LYx-26A6RoGKHBaCacKetIAzAmXrjiG5eXMD_XNhnzyzDZwlf8QEPZ_AQ4C1SvEbYEfznaMFHKD0C9WKUZwuCYPAo5b-9VsXmp4RpTPVhtINA7bWeIXLVCREN6V6Z4zBVvGQ`
-          Authorization: `Bearer ${API_TOKEN}`
+          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
         },
         body: JSON.stringify({
           lat: latitude,
           lon: longitude,
+          dob: profile?.dob?.split('T')[0] || '',
+          tob: profile?.tob || '00:00',
+          pob: profile?.pob || '',
+          name: profile?.name || 'User',
           date: new Date().toISOString().split("T")[0],
           time: new Date().toTimeString().split(" ")[0].slice(0, 5)
         })
