@@ -115,6 +115,7 @@ export default function CosmicHomeScreen({ navigation }) {
   const [refreshing, setRefreshing]= useState(false);
   const [error, setError]          = useState(null);
   const [greeting, setGreeting]    = useState('');
+  const [coinBalance, setCoins]    = useState(null);
 
   useEffect(() => {
     const hr = new Date().getHours();
@@ -125,7 +126,22 @@ export default function CosmicHomeScreen({ navigation }) {
     else              setGreeting('Good Night');
   }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    // Load coin balance quietly
+    (async () => {
+      try {
+        const { auth: fbAuth } = await import('../config/firebase');
+        const token = fbAuth.currentUser ? await fbAuth.currentUser.getIdToken() : null;
+        if (!token) return;
+        const res = await fetch(`${BASE_URL}/api/coins/balance`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: '{}',
+        });
+        const d = await res.json();
+        setCoins(d.balance);
+      } catch {}
+    })();
+  }, []);
 
   const loadData = async () => {
     try {
@@ -271,7 +287,14 @@ export default function CosmicHomeScreen({ navigation }) {
         </View>
 
         {/* Name — large, personal */}
-        <Text style={s.heroName}>{profile?.name?.split(' ')[0] || 'Seeker'}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0 }}>
+          <Text style={[s.heroName, { marginBottom: 0 }]}>{profile?.name?.split(' ')[0] || 'Seeker'}</Text>
+          {coinBalance !== null && (
+            <TouchableOpacity onPress={() => navigation.navigate('WalletScreen')} style={s.coinPill}>
+              <Text style={s.coinPillTxt}>🪙 {coinBalance.toLocaleString()}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* Score + Zone — the hero moment */}
         <View style={s.heroCenter}>
@@ -475,6 +498,9 @@ const s = StyleSheet.create({
   // Planet card
   planetCard:    { borderRadius: 20, padding: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
 
+  // Coin pill
+  coinPill:      { backgroundColor: 'rgba(244,185,66,0.15)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(244,185,66,0.3)' },
+  coinPillTxt:   { fontSize: 13, color: '#F4B942', fontWeight: '800' },
   // Dasha — original style
   dashaCard:     { backgroundColor: '#1E0A4F', borderRadius: 20, padding: 20, marginBottom: 8 },
   dashaTitle:    { fontSize: 14, fontWeight: '700', color: '#F4B942', marginBottom: 16 },

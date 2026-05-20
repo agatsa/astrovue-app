@@ -70,6 +70,9 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>👤 Account</Text>
           <SettingItem label="📝 Edit Profile" onPress={() => navigation.navigate('EditProfile')} />
+          <SettingItem label="🪙 Dharma Wallet" onPress={() => navigation.navigate('WalletScreen')} />
+          <SettingItem label="📅 My Bookings" onPress={() => navigation.navigate('UserBookings')} />
+          <SettingItem label="📊 Provider Dashboard" onPress={() => navigation.navigate('ProviderDashboard')} />
           <SettingItem
             label="🚪 Logout"
             color="red"
