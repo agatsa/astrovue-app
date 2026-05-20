@@ -182,19 +182,26 @@ export default function AiJyotishScreen({ navigation }) {
     <SafeAreaView style={s.root}>
       {/* Header */}
       <LinearGradient colors={gradients.cosmic} style={s.header}>
-        <TouchableOpacity onPress={() => setSidebar(true)} style={s.menuBtn}>
-          <Text style={s.menuTxt}>☰</Text>
+        <TouchableOpacity onPress={() => navigation.canGoBack() ? navigation.goBack() : setSidebar(true)} style={s.menuBtn}>
+          <Text style={s.menuTxt}>{navigation.canGoBack() ? '‹' : '☰'}</Text>
         </TouchableOpacity>
         <View style={s.headerCenter}>
           <Text style={s.headerEmoji}>🔮</Text>
           <View>
-            <Text style={s.headerTitle}>AI Jyotish</Text>
+            <Text style={s.headerTitle}>Ask Astro</Text>
             <Text style={s.headerSub}>{selectedDate === todayKey() ? 'Today' : formatDate(selectedDate)}</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => setPersistModal(true)} style={s.memBtn}>
-          <Text style={s.memTxt}>🧠</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          {navigation.canGoBack() && (
+            <TouchableOpacity onPress={() => setSidebar(true)} style={s.memBtn}>
+              <Text style={s.memTxt}>☰</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => setPersistModal(true)} style={s.memBtn}>
+            <Text style={s.memTxt}>🧠</Text>
+          </TouchableOpacity>
+        </View>
       </LinearGradient>
 
       <KeyboardAvoidingView
