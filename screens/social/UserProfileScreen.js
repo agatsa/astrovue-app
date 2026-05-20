@@ -163,7 +163,29 @@ export default function UserProfileScreen({ route, navigation }) {
           </View>
 
           {bio ? <Text style={s.bio}>{bio}</Text> : null}
-          {services ? (
+          {/* Structured bookable services */}
+          {(profile?.services_list?.length > 0 && profile?.is_consultant) ? (
+            <View style={s.servicesSection}>
+              <Text style={s.servicesTitle}>✨ Book a Session</Text>
+              {profile.services_list.map((svc, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={s.serviceCard}
+                  onPress={() => navigation.navigate('BookingScreen', { astrologer: profile, service: svc })}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.svcName}>{svc.name}</Text>
+                    <Text style={s.svcMeta}>{svc.duration} min session</Text>
+                  </View>
+                  <View style={s.svcRight}>
+                    <Text style={s.svcPrice}>₹{svc.price}</Text>
+                    <View style={s.bookChip}><Text style={s.bookChipTxt}>Book</Text></View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : services ? (
             <View style={s.servicesBox}>
               <Text style={s.servicesTitle}>✨ Services Offered</Text>
               <Text style={s.servicesTxt}>{services}</Text>
@@ -267,9 +289,17 @@ const s = StyleSheet.create({
   badge:        { backgroundColor: '#F4F4F4', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   badgeTxt:     { fontSize: 11.5, color: '#555', fontWeight: '600' },
   bio:          { fontSize: 13.5, color: '#262626', lineHeight: 19, marginBottom: 8 },
-  servicesBox:  { backgroundColor: '#F8F0FF', borderRadius: 12, padding: 12, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: '#7C3AED' },
-  servicesTitle:{ fontSize: 12, fontWeight: '700', color: '#7C3AED', marginBottom: 4 },
-  servicesTxt:  { fontSize: 13, color: '#444', lineHeight: 18 },
+  servicesBox:     { backgroundColor: '#F8F0FF', borderRadius: 12, padding: 12, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: '#7C3AED' },
+  servicesSection: { marginBottom: 10 },
+  servicesTitle:   { fontSize: 13, fontWeight: '800', color: '#7C3AED', marginBottom: 8 },
+  servicesTxt:     { fontSize: 13, color: '#444', lineHeight: 18 },
+  serviceCard:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8F0FF', borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#E0D5FF' },
+  svcName:         { fontSize: 14, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
+  svcMeta:         { fontSize: 12, color: '#8E8E8E' },
+  svcRight:        { alignItems: 'flex-end', gap: 6 },
+  svcPrice:        { fontSize: 18, fontWeight: '900', color: '#7C3AED' },
+  bookChip:        { backgroundColor: '#7C3AED', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 5 },
+  bookChipTxt:     { color: '#fff', fontSize: 12, fontWeight: '700' },
   website:      { fontSize: 13, color: '#7C3AED', fontWeight: '600' },
   actionRow:    { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingBottom: 16 },
   followBtn:    { flex: 1, backgroundColor: '#7C3AED', borderRadius: 8, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' },

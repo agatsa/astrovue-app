@@ -75,6 +75,7 @@ import UserSearchScreen from './screens/social/UserSearchScreen';
 import UserProfileScreen from './screens/social/UserProfileScreen';
 import FollowListScreen from './screens/social/FollowListScreen';
 import PostDetailScreen from './screens/social/PostDetailScreen';
+import BookingScreen from './screens/social/BookingScreen';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text as RNText } from 'react-native';
 import { colors } from './config/theme';
@@ -313,6 +314,7 @@ export default function App() {
             <Stack.Screen name="UserProfile"          component={UserProfileScreen} />
             <Stack.Screen name="FollowList"           component={FollowListScreen} />
             <Stack.Screen name="PostDetail"           component={PostDetailScreen} />
+            <Stack.Screen name="BookingScreen"        component={BookingScreen} />
             <Stack.Screen name="MuhuratScreen"        component={MuhuratScreen} />
             <Stack.Screen name="RelationshipCosmos"  component={RelationshipCosmosScreen} />
             <Stack.Screen name="HealthRhythm"        component={HealthRhythmScreen} />

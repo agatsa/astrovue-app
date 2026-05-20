@@ -31,9 +31,14 @@ export default function EditProfileScreen({ navigation }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [savedPhone, setSavedPhone] = useState('');
-  const [bio, setBio] = useState('');
-  const [services, setServices] = useState('');
-  const [website, setWebsite] = useState('');
+  const [bio, setBio]               = useState('');
+  const [website, setWebsite]       = useState('');
+  const [isConsultant, setConsult]  = useState(false);
+  const [languages, setLanguages]   = useState('Hindi, English');
+  const [experience, setExperience] = useState('');
+  const [servicesList, setServicesList] = useState([
+    { name: '', duration: '30', price: '' },
+  ]);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -54,8 +59,11 @@ export default function EditProfileScreen({ navigation }) {
         setPob(profile?.pob || '');
         setSavedPhone(profile?.phone || profile?.phoneNumber || '');
         setBio(profile?.bio || '');
-        setServices(profile?.services || '');
         setWebsite(profile?.website || '');
+        setConsult(profile?.is_consultant || false);
+        setLanguages(profile?.languages || 'Hindi, English');
+        setExperience(profile?.experience || '');
+        if (profile?.services_list?.length) setServicesList(profile.services_list);
 
         if (profile?.lat) setLat(profile.lat);
         if (profile?.lon) setLon(profile.lon);
@@ -164,18 +172,17 @@ export default function EditProfileScreen({ navigation }) {
       const existingProfileStr = await AsyncStorage.getItem('userProfile');
       const existingProfile = JSON.parse(existingProfileStr || '{}');
 
+      const validServices = servicesList.filter(s => s.name && s.price);
       const profileData = {
         ...existingProfile,
-        name,
-        photo: image || existingProfile.photo || '',
-        dob,
-        tob,
-        pob,
-        lat,
-        lon,
-        bio,
-        services,
-        website,
+        name, photo: image || existingProfile.photo || '',
+        dob, tob, pob, lat, lon,
+        bio, website,
+        is_consultant: isConsultant,
+        languages, experience,
+        services_list: validServices,
+        // Legacy plain text services for backwards compat
+        services: validServices.map(s => `${s.name} (${s.duration}min) — ₹${s.price}`).join('\n'),
         updatedAt: new Date().toISOString(),
       };
 
@@ -273,17 +280,74 @@ export default function EditProfileScreen({ navigation }) {
         />
         <Text style={styles.charCount}>{bio.length}/200</Text>
 
-        <Text style={styles.label}>Services You Offer (optional)</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={services}
-          onChangeText={setServices}
-          placeholder="e.g. Kundli reading, Muhurat timing, Vastu consultation, Compatibility matching..."
-          placeholderTextColor="#ABABAB"
-          multiline
-          maxLength={300}
-          numberOfLines={3}
-        />
+        {/* Consultation toggle */}
+        <TouchableOpacity style={styles.toggleRow} onPress={() => setConsult(p => !p)}>
+          <View>
+            <Text style={styles.toggleLabel}>Offer Consultations</Text>
+            <Text style={styles.toggleSub}>Let users book paid sessions with you</Text>
+          </View>
+          <View style={[styles.toggle, isConsultant && styles.toggleOn]}>
+            <View style={[styles.toggleThumb, isConsultant && styles.toggleThumbOn]} />
+          </View>
+        </TouchableOpacity>
+
+        {isConsultant && (
+          <>
+            <Text style={styles.label}>Languages</Text>
+            <TextInput style={styles.input} value={languages} onChangeText={setLanguages}
+              placeholder="Hindi, English, Tamil..." placeholderTextColor="#ABABAB" />
+
+            <Text style={styles.label}>Years of Experience</Text>
+            <TextInput style={styles.input} value={experience} onChangeText={setExperience}
+              placeholder="e.g. 8 years" placeholderTextColor="#ABABAB" keyboardType="default" />
+
+            <Text style={styles.label}>Your Services</Text>
+            {servicesList.map((svc, i) => (
+              <View key={i} style={styles.serviceRow}>
+                <TextInput
+                  style={[styles.input, { flex: 2, marginBottom: 0 }]}
+                  value={svc.name} onChangeText={v => {
+                    const updated = [...servicesList]; updated[i] = { ...updated[i], name: v };
+                    setServicesList(updated);
+                  }}
+                  placeholder="Service name (e.g. Kundli Reading)"
+                  placeholderTextColor="#ABABAB"
+                />
+                <TextInput
+                  style={[styles.input, { flex: 0.7, marginBottom: 0 }]}
+                  value={svc.duration} onChangeText={v => {
+                    const updated = [...servicesList]; updated[i] = { ...updated[i], duration: v };
+                    setServicesList(updated);
+                  }}
+                  placeholder="30 min"
+                  placeholderTextColor="#ABABAB"
+                  keyboardType="numeric"
+                />
+                <TextInput
+                  style={[styles.input, { flex: 0.8, marginBottom: 0 }]}
+                  value={svc.price} onChangeText={v => {
+                    const updated = [...servicesList]; updated[i] = { ...updated[i], price: v };
+                    setServicesList(updated);
+                  }}
+                  placeholder="₹999"
+                  placeholderTextColor="#ABABAB"
+                  keyboardType="numeric"
+                />
+                {servicesList.length > 1 && (
+                  <TouchableOpacity onPress={() => setServicesList(s => s.filter((_, j) => j !== i))}>
+                    <Text style={{ color: '#EF4444', fontSize: 20, paddingHorizontal: 6 }}>✕</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+            {servicesList.length < 5 && (
+              <TouchableOpacity style={styles.addServiceBtn}
+                onPress={() => setServicesList(s => [...s, { name: '', duration: '30', price: '' }])}>
+                <Text style={styles.addServiceTxt}>+ Add Another Service</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
 
         <Text style={styles.label}>Website / Instagram (optional)</Text>
         <TextInput
@@ -346,8 +410,18 @@ const styles = StyleSheet.create({
   sectionHeader: { marginTop: 28, marginBottom: 8, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E' },
   sectionSub: { fontSize: 12, color: '#8E8E8E', marginTop: 2 },
-  saveBtn: { backgroundColor: '#7C3AED', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 28, marginBottom: 10 },
-  saveBtnTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  saveBtn:        { backgroundColor: '#7C3AED', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 28, marginBottom: 10 },
+  saveBtnTxt:     { color: '#fff', fontSize: 16, fontWeight: '700' },
+  toggleRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8, backgroundColor: '#F8F0FF', borderRadius: 14, padding: 14 },
+  toggleLabel:    { fontSize: 15, fontWeight: '700', color: '#1A1A2E' },
+  toggleSub:      { fontSize: 12, color: '#8E8E8E', marginTop: 2 },
+  toggle:         { width: 48, height: 28, borderRadius: 14, backgroundColor: '#E0E0E0', padding: 2, justifyContent: 'center' },
+  toggleOn:       { backgroundColor: '#7C3AED' },
+  toggleThumb:    { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff', alignSelf: 'flex-start' },
+  toggleThumbOn:  { alignSelf: 'flex-end' },
+  serviceRow:     { flexDirection: 'row', gap: 6, alignItems: 'center', marginBottom: 8 },
+  addServiceBtn:  { borderWidth: 1.5, borderColor: '#7C3AED', borderRadius: 10, borderStyle: 'dashed', padding: 10, alignItems: 'center', marginTop: 4, marginBottom: 8 },
+  addServiceTxt:  { color: '#7C3AED', fontWeight: '700', fontSize: 14 },
   suggestionBox: {
     backgroundColor: '#fff',
     borderWidth: 1,
