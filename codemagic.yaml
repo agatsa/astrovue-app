@@ -15,7 +15,7 @@ workflows:
 
     environment:
       groups:
-        - astrovue-ios-signing   # Create this group in Codemagic (see README below)
+        - ios-signing   # Reuses existing Codemagic group — read-only, Agatsa untouched
       vars:
         XCODE_WORKSPACE:  ios/AstroVue.xcworkspace
         XCODE_SCHEME:     AstroVue
