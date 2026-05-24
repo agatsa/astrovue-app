@@ -82,6 +82,10 @@ workflows:
           GIT_BUILD=$(git rev-list --count HEAD)
           echo "Version: $MARKETING_VERSION | Build: $GIT_BUILD"
 
+          # Stamp plist directly — Info.plist has hardcoded "1" not $(CURRENT_PROJECT_VERSION)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GIT_BUILD" ios/AstroVue/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING_VERSION" ios/AstroVue/Info.plist
+
           xcodebuild archive \
             -workspace "$XCODE_WORKSPACE" \
             -scheme     "$XCODE_SCHEME" \
