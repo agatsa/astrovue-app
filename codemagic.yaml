@@ -79,7 +79,8 @@ workflows:
           security find-identity -v -p codesigning
 
           MARKETING_VERSION=$(node -e "console.log(require('./package.json').version)")
-          echo "Version: $MARKETING_VERSION | Build: $BUILD_NUMBER"
+          GIT_BUILD=$(git rev-list --count HEAD)
+          echo "Version: $MARKETING_VERSION | Build: $GIT_BUILD"
 
           xcodebuild archive \
             -workspace "$XCODE_WORKSPACE" \
@@ -93,7 +94,7 @@ workflows:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             PROVISIONING_PROFILE="$PROFILE_UUID" \
-            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            CURRENT_PROJECT_VERSION="$GIT_BUILD" \
             MARKETING_VERSION="$MARKETING_VERSION" \
             2>&1 | tee /tmp/xcodebuild.log; XCODE_EXIT=${PIPESTATUS[0]}
 
