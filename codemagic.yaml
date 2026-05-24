@@ -51,7 +51,7 @@ workflows:
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILE_DIR"
           TMP=/tmp/profile.mobileprovision
-          printf '%s' "$CM_PROVISIONING_PROFILE" | base64 --decode > "$TMP"
+          printf '%s' "$ASTROVUE_PROVISIONING_PROFILE" | base64 --decode > "$TMP"
           security cms -D -i "$TMP" > /tmp/profile.plist
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist)
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/profile.plist)
