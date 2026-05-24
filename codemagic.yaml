@@ -50,13 +50,11 @@ workflows:
           set -euo pipefail
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILE_DIR"
-          TMP=/tmp/profile.mobileprovision
-          printf '%s' "$ASTROVUE_PROVISIONING_PROFILE" | base64 --decode > "$TMP"
-          security cms -D -i "$TMP" > /tmp/profile.plist
+          security cms -D -i profiles/AstroVue.mobileprovision > /tmp/profile.plist
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist)
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/profile.plist)
           echo "UUID: $PROFILE_UUID  Name: $PROFILE_NAME"
-          cp "$TMP" "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          cp profiles/AstroVue.mobileprovision "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
           echo "PROFILE_UUID=$PROFILE_UUID" >> $CM_ENV
           echo "PROFILE_NAME=$PROFILE_NAME" >> $CM_ENV
 
