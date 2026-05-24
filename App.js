@@ -250,38 +250,21 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Wait for Firebase auth to settle, then decide which screen to show.
-    // If AsyncStorage has a profile but Firebase has no valid session (e.g. after
-    // reinstalling or Firebase project change), clear the stale profile and force
-    // the user through OTP login again.
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    // App uses custom backend OTP auth — AsyncStorage profile is the source of truth
+    const check = async () => {
       const data = await AsyncStorage.getItem('userProfile');
-
-      if (firebaseUser && data) {
-        // Fully signed in — show main app
-        setHasProfile(true);
-      } else if (data && !firebaseUser) {
-        // Stale profile in storage but no Firebase session — clear and re-login
-        await AsyncStorage.removeItem('userProfile');
-        setHasProfile(false);
-      } else {
-        // No profile or no firebase user — show signup/login
-        setHasProfile(false);
-      }
+      setHasProfile(!!data);
       setIsLoading(false);
-    });
+    };
+    check();
 
-    // Still poll every 2s so the screen switches right after OTP login completes
+    // Poll every 2s so the screen switches right after Step7 saves the profile
     const interval = setInterval(async () => {
       const data = await AsyncStorage.getItem('userProfile');
-      const firebaseUser = auth.currentUser;
-      if (firebaseUser && data) setHasProfile(true);
+      if (data) setHasProfile(true);
     }, 2000);
 
-    return () => {
-      unsubscribe();
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, []);
   
   
@@ -292,7 +275,7 @@ export default function App() {
     return (
       <LinearGradient colors={['#080416', '#1E0A4F', '#2D0F7A']} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <RNText style={{ fontSize: 48, marginBottom: 16 }}>🪐</RNText>
-        <RNText style={{ color: '#F4B942', fontSize: 24, fontWeight: '800' }}>AstroVue</RNText>
+        <RNText style={{ color: '#F4B942', fontSize: 24, fontWeight: '800' }}>Cosmiq</RNText>
         <ActivityIndicator size="large" color="#F4B942" style={{ marginTop: 24 }} />
       </LinearGradient>
     );
