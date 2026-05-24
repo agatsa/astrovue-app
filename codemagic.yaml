@@ -7,13 +7,13 @@ workflows:
 
     environment:
       # Codemagic auto-fetches the Distribution cert + provisioning profile
-      # for com.kundlisutra.astrovue using the ASC API key below.
+      # for com.agatsa.astrovue using the ASC API key below.
       # No manual CM_CERTIFICATE or CM_PROVISIONING_PROFILE needed.
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.kundlisutra.astrovue
+        bundle_identifier: com.agatsa.astrovue
       vars:
-        BUNDLE_ID: com.kundlisutra.astrovue
+        BUNDLE_ID: com.agatsa.astrovue
         APPLE_TEAM_ID: CQ22L6K4HN
         XCODE_WORKSPACE: ios/AstroVue.xcworkspace
         XCODE_SCHEME: AstroVue
