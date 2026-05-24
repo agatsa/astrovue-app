@@ -32,7 +32,7 @@
     "expo-location": "~18.1.6",
     "expo-media-library": "~17.1.7",
     "expo-modules-core": "~2.5.0",
-    "expo-notifications": "^55.0.23",
+    "expo-notifications": "^0.30.7",
     "expo-random": "^14.0.1",
     "expo-sensors": "~14.1.4",
     "expo-sharing": "~13.1.5",
