@@ -14,7 +14,7 @@ workflows:
         XCODE_WORKSPACE:  ios/AstroVue.xcworkspace
         XCODE_SCHEME:     AstroVue
       node: v22.0.0
-      xcode: 16.3
+      xcode: latest
 
     scripts:
 
