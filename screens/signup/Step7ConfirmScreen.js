@@ -1,5 +1,5 @@
 import { BASE_URL } from "../../config/constants";
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,16 +10,16 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CommonActions } from '@react-navigation/native';
-
-import { Alert } from 'react-native';
 
 
 
 export default function Step7ConfirmScreen({ navigation, route }) {
+  const [loading, setLoading] = useState(false);
   const {
     name,
     dob,
@@ -76,10 +76,9 @@ export default function Step7ConfirmScreen({ navigation, route }) {
 
 
   const onConfirm = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
-      const formattedDob = formatDate(dob);   // "1997-12-18"
-      const formattedTob = formatTime(tob);   // "18:15"
-
       const userPayload = {
         name,
         email,
@@ -94,7 +93,6 @@ export default function Step7ConfirmScreen({ navigation, route }) {
           twitter: '',
         },
       };
-
 
       console.log('📤 Payload to send:', userPayload);
 
@@ -119,20 +117,16 @@ export default function Step7ConfirmScreen({ navigation, route }) {
         return;
       }
 
+      // Save profile — App.js polls AsyncStorage every 2s and switches to main automatically
       await AsyncStorage.setItem('userProfile', JSON.stringify({
         ...userPayload,
         updatedAt: new Date().toISOString(),
       }));
-
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        })
-      );
     } catch (error) {
       console.error('❌ Confirm error:', error);
       Alert.alert('Error', error.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -230,9 +224,12 @@ export default function Step7ConfirmScreen({ navigation, route }) {
               <Image source={{ uri: photo }} style={styles.image} />
             )}
 
-            <TouchableOpacity style={styles.button} onPress={onConfirm}>
+            <TouchableOpacity style={styles.button} onPress={onConfirm} disabled={loading}>
               <LinearGradient colors={['#7a4fe2', '#aa77ff']} style={styles.buttonGradient}>
-                <Text style={styles.buttonText}>Confirm & Start</Text>
+                {loading
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={styles.buttonText}>Confirm & Start</Text>
+                }
               </LinearGradient>
             </TouchableOpacity>
           </ScrollView>
