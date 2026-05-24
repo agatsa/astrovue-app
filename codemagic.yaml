@@ -44,8 +44,10 @@ workflows:
       - name: Strip alpha from app icon
         script: |
           ICON=ios/AstroVue/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png
-          sips --removeProperty hasAlpha "$ICON" 2>/dev/null || true
-          echo "Icon alpha stripped ($(sips -g hasAlpha "$ICON" 2>/dev/null || echo unknown))"
+          # JPEG roundtrip via sips — JPEG has no alpha, guarantees opaque RGB PNG output
+          sips -s format jpeg -s formatOptions 100 "$ICON" --out /tmp/icon_flat.jpg 2>/dev/null
+          sips -s format png /tmp/icon_flat.jpg --out "$ICON" 2>/dev/null
+          echo "Icon alpha stripped: hasAlpha=$(sips -g hasAlpha "$ICON" | grep hasAlpha)"
 
       - name: Import distribution certificate
         script: |
