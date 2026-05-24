@@ -10,9 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth } from '../config/firebase';
 import { BASE_URL } from '../config/constants';
-import { onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const TOP = StatusBar.currentHeight || 0;
@@ -128,19 +126,6 @@ export default function CosmicHomeScreen({ navigation }) {
 
   useEffect(() => {
     loadData();
-    // Load coin balance quietly
-    (async () => {
-      try {
-        const { auth: fbAuth } = await import('../config/firebase');
-        const token = fbAuth.currentUser ? await fbAuth.currentUser.getIdToken() : null;
-        if (!token) return;
-        const res = await fetch(`${BASE_URL}/api/coins/balance`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: '{}',
-        });
-        const d = await res.json();
-        setCoins(d.balance);
-      } catch {}
-    })();
   }, []);
 
   const loadData = async () => {
@@ -169,22 +154,13 @@ export default function CosmicHomeScreen({ navigation }) {
   };
 
   const fetchFreshEnergy = async (prof) => {
+    const today = new Date().toISOString().split('T')[0];
     const p = prof || profile;
     if (!p?.dob || !p?.pob) { setError('complete_profile'); setLoading(false); setRefreshing(false); return; }
     try {
-      let idToken = null;
-      try {
-        const storedPhone = await AsyncStorage.getItem('@phoneNumber') || '';
-        const tokenRes = await fetch(`${BASE_URL}/api/firebase-token`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber: storedPhone, countryCode: '91' }),
-        });
-        const td = await tokenRes.json();
-        if (td.token) { const cred = await signInWithCustomToken(auth, td.token); idToken = await cred.user.getIdToken(); }
-      } catch {}
       const res  = await fetch(`${BASE_URL}/api/daily-energy`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: p.name, dob: p.dob, tob: p.tob || '12:00', pob: p.pob }),
       });
       const data = await res.json();
