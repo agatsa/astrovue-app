@@ -27,6 +27,13 @@ workflows:
           gem install cocoapods --no-document 2>/dev/null || true
           pod install --repo-update
 
+      - name: Patch fmt consteval for Xcode 26
+        script: |
+          find ios/Pods/fmt -name "*.h" | while IFS= read -r f; do
+            sed -i '' 's/# *define FMT_CONSTEVAL consteval/# define FMT_CONSTEVAL constexpr/g' "$f" 2>/dev/null || true
+          done
+          echo "fmt patch done"
+
       - name: Set CFBundleIconName
         script: |
           /usr/libexec/PlistBuddy -c "Add :CFBundleIconName string AppIcon" \
