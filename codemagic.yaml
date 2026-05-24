@@ -8,7 +8,7 @@ workflows:
     environment:
       vars:
         BUNDLE_ID:        com.agatsa.astrovue
-        APPLE_TEAM_ID:    CQ22L6K4HN
+        APPLE_TEAM_ID:    LJM8LK8Y2H
         XCODE_WORKSPACE:  ios/AstroVue.xcworkspace
         XCODE_SCHEME:     AstroVue
       node: v22.0.0
